@@ -3,7 +3,7 @@ import { createClient } from "@clickhouse/client";
 // Ensure that we only initialize a single ClickHouse client instance
 // to avoid exhausting connections in a Serverless or Next.js development environment.
 
-const globalForClickHouse = globalThis as unknown as { clickhouse: any };
+const globalForClickHouse = globalThis as unknown as { clickhouse: ReturnType<typeof createClient> | undefined };
 
 export const clickhouse =
   globalForClickHouse.clickhouse ||

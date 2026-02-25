@@ -1,9 +1,7 @@
 import { getGlobalMetrics, getTopAgents, getTopSkills, TopSkill, TopAgent } from "@/lib/queries";
-import { Terminal, Cpu, DownloadCloud, Zap, BookOpen } from "lucide-react";
-import Link from "next/link";
+import { Terminal, Cpu, DownloadCloud, Zap } from "lucide-react";
 
 export const dynamic = 'force-dynamic';
-export const fetchCache = 'force-no-store';
 export default async function Home() {
     const metrics = await getGlobalMetrics();
     const topSkills = await getTopSkills(10);

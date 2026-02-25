@@ -1,4 +1,3 @@
-import { Terminal } from 'lucide-react';
 import Link from 'next/link';
 import { getAllDocs } from '@/lib/docs';
 

@@ -9,7 +9,7 @@ export interface DocMeta {
     title: string;
     date?: string;
     description?: string;
-    [key: string]: any;
+    [key: string]: unknown;
 }
 
 export function getAllDocs(): DocMeta[] {

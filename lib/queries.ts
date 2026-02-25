@@ -1,3 +1,4 @@
+import { connection } from "next/server";
 import { clickhouse } from "@/lib/clickhouse";
 
 export type TopSkill = { skill: string; installs: number };
@@ -5,6 +6,7 @@ export type TopAgent = { agent: string; usages: number };
 export type GlobalMetrics = { total_installs: number; total_unique_skills: number };
 
 export async function getGlobalMetrics(): Promise<GlobalMetrics> {
+    await connection();
     try {
         const result = await clickhouse.query({
             query: `
@@ -13,6 +15,7 @@ export async function getGlobalMetrics(): Promise<GlobalMetrics> {
           uniqExact(skill) as total_unique_skills
         FROM telemetry_events 
         WHERE event = 'install'
+        SETTINGS optimize_trivial_count_query = 0
       `,
             format: "JSONEachRow"
         });
@@ -25,6 +28,7 @@ export async function getGlobalMetrics(): Promise<GlobalMetrics> {
 }
 
 export async function getTopSkills(limit = 10): Promise<TopSkill[]> {
+    await connection();
     try {
         const result = await clickhouse.query({
             query: `
@@ -34,6 +38,7 @@ export async function getTopSkills(limit = 10): Promise<TopSkill[]> {
         GROUP BY skill 
         ORDER BY installs DESC 
         LIMIT ${limit}
+        SETTINGS optimize_trivial_count_query = 0
       `,
             format: "JSONEachRow"
         });
@@ -45,6 +50,7 @@ export async function getTopSkills(limit = 10): Promise<TopSkill[]> {
 }
 
 export async function getTopAgents(limit = 10): Promise<TopAgent[]> {
+    await connection();
     try {
         const result = await clickhouse.query({
             query: `
@@ -54,6 +60,7 @@ export async function getTopAgents(limit = 10): Promise<TopAgent[]> {
         GROUP BY agent 
         ORDER BY usages DESC 
         LIMIT ${limit}
+        SETTINGS optimize_trivial_count_query = 0
       `,
             format: "JSONEachRow"
         });

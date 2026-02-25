@@ -10,7 +10,8 @@ export async function generateStaticParams() {
     }));
 }
 
-export default function DocPage({ params }: { params: { slug: string[] } }) {
+export default async function DocPage(props: { params: Promise<{ slug: string[] }> }) {
+    const params = await props.params;
     const slug = params.slug.join('/');
     const doc = getDocBySlug(slug);
 
