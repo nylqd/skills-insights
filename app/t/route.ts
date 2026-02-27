@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { clickhouse } from "../../lib/clickhouse";
+import { pool } from "../../lib/db";
 
 export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
@@ -19,22 +19,15 @@ export async function GET(req: NextRequest) {
 
     try {
         // We insert each skill individually for better visualization in leaderboard
-        const insertValues = parsedSkills.map((skill) => ({
-            event,
-            source,
-            skill,
-            agent: agents,
-            cli_version: cliVersion,
-            is_ci: isCI,
-            // timestamp is automatically filled by ClickHouse if omitted
-        }));
+        const insertValues = parsedSkills.map((skill) => [
+            event, source, skill, agents, cliVersion, isCI,
+        ]);
 
-        // Fire and forget, don't await ClickHouse in the critical path to block the edge
-        clickhouse.insert({
-            table: "telemetry_events",
-            values: insertValues,
-            format: "JSONEachRow",
-        }).catch((err: unknown) => {
+        // Fire and forget, don't await MySQL in the critical path to block the edge
+        pool.query(
+            "INSERT INTO telemetry_events (event, source, skill, agent, cli_version, is_ci) VALUES ?",
+            [insertValues]
+        ).catch((err: unknown) => {
             console.error("Failed to async insert analytics:", err);
         });
 
