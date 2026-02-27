@@ -9,7 +9,7 @@ export type GlobalMetrics = { total_installs: number; total_unique_skills: numbe
 export async function getGlobalMetrics(): Promise<GlobalMetrics> {
     await connection();
     try {
-        const [rows] = await pool.execute<RowDataPacket[]>(
+        const [rows] = await pool.query<RowDataPacket[]>(
             `SELECT COUNT(*) as total_installs,
                     COUNT(DISTINCT skill) as total_unique_skills
              FROM telemetry_events
