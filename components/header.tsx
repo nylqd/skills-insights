@@ -2,39 +2,13 @@
 
 import { Terminal, Copy, Check } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useCopy } from "@/lib/use-copy";
 
 export function Header() {
-    const [copied, setCopied] = useState(false);
+    const { copied, copy } = useCopy();
     const command = "curl -sL https://skills.sh | bash";
 
-    const handleCopy = async () => {
-        try {
-            if (navigator.clipboard && window.isSecureContext) {
-                await navigator.clipboard.writeText(command);
-            } else {
-                // Fallback for non-secure contexts or older browsers
-                const textArea = document.createElement("textarea");
-                textArea.value = command;
-                textArea.style.position = "absolute";
-                textArea.style.left = "-9999px";
-                textArea.style.top = "0";
-                document.body.appendChild(textArea);
-                textArea.focus();
-                textArea.select();
-                try {
-                    document.execCommand('copy');
-                } catch (err) {
-                    console.error('Fallback: Oops, unable to copy', err);
-                }
-                document.body.removeChild(textArea);
-            }
-            setCopied(true);
-            setTimeout(() => setCopied(false), 2000);
-        } catch (err) {
-            console.error("Failed to copy text: ", err);
-        }
-    };
+    const handleCopy = () => copy(command);
 
     return (
         <header className="mb-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-8 w-full">

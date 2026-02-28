@@ -17,6 +17,8 @@ export async function GET(req: NextRequest) {
         ? skillsParam.split(",").map((s) => s.trim()).filter(Boolean)
         : ["unknown"]; // at least one event entry
 
+    console.log(`[telemetry] GET /t event=${event} source=${source} skills=${skillsParam} agent=${agents} v=${cliVersion} ci=${isCI}`);
+
     try {
         // We insert each skill individually for better visualization in leaderboard
         const insertValues = parsedSkills.map((skill) => [
@@ -27,12 +29,14 @@ export async function GET(req: NextRequest) {
         pool.query(
             "INSERT INTO telemetry_events (event, source, skill, agent, cli_version, is_ci) VALUES ?",
             [insertValues]
-        ).catch((err: unknown) => {
-            console.error("Failed to async insert analytics:", err);
+        ).then(() => {
+            console.log(`[telemetry] ✅ Inserted ${insertValues.length} row(s)`);
+        }).catch((err: unknown) => {
+            console.error("[telemetry] ❌ Failed to insert:", err);
         });
 
     } catch (err: unknown) {
-        console.error("Critical error in telemetry ingest:", err);
+        console.error("[telemetry] ❌ Critical error:", err);
     }
 
     // Always return 204 FAST

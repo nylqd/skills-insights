@@ -1,5 +1,6 @@
 import { getGlobalMetrics, getTopAgents, getTopSkills, TopSkill, TopAgent } from "@/lib/queries";
 import { Terminal, Cpu, DownloadCloud, Zap } from "lucide-react";
+import { CopyableSource } from "@/components/copyable-source";
 
 export const dynamic = 'force-dynamic';
 export default async function Home() {
@@ -50,7 +51,12 @@ export default async function Home() {
                                             <div className="flex items-center justify-between z-10 relative px-4 py-3">
                                                 <div className="flex items-center gap-4">
                                                     <span className="text-zinc-500 font-mono text-sm w-4">{index + 1}</span>
-                                                    <span className="font-medium text-zinc-200 group-hover:text-white transition-colors">{item.skill}</span>
+                                                    <div className="flex flex-col">
+                                                        <span className="font-medium text-zinc-200 group-hover:text-white transition-colors">{item.skill}</span>
+                                                        {item.source && (
+                                                            <CopyableSource source={item.source} />
+                                                        )}
+                                                    </div>
                                                 </div>
                                                 <span className="font-mono text-zinc-400 group-hover:text-cyan-400 transition-colors">
                                                     {Number(item.installs).toLocaleString()}
