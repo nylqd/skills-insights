@@ -71,14 +71,14 @@ export default async function Home() {
 
 function MetricsCard({ title, value, icon }: { title: string; value: string; icon: React.ReactNode }) {
     return (
-        <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-xl px-5 py-4 backdrop-blur-xl relative overflow-hidden group hover:border-zinc-700/50 transition-colors">
-            <div className="flex items-center justify-between mb-2 relative z-10">
-                <h3 className="text-zinc-500 text-xs font-medium uppercase tracking-wider">{title}</h3>
-                <div className="p-1.5 bg-zinc-950/80 rounded-md border border-zinc-800/60">
+        <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-xl px-5 py-3 backdrop-blur-xl relative overflow-hidden group hover:border-zinc-700/50 transition-colors flex items-center justify-between gap-4">
+            <div className="flex items-center gap-2.5 relative z-10">
+                <div className="p-1.5 bg-zinc-950/80 rounded-md border border-zinc-800/60 shrink-0">
                     {icon}
                 </div>
+                <h3 className="text-zinc-500 text-xs font-medium uppercase tracking-wider">{title}</h3>
             </div>
-            <div className="text-2xl font-bold text-zinc-100 relative z-10 tabular-nums">{value}</div>
+            <span className="text-xl font-bold text-zinc-100 tabular-nums relative z-10">{value}</span>
             <div className="absolute inset-x-0 -bottom-px h-px bg-gradient-to-r from-transparent via-zinc-700 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
         </div>
     );
