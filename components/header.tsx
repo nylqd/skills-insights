@@ -51,28 +51,26 @@ export function Header() {
                     </div>
                 </div>
 
-                <div className="p-1 rounded-xl bg-gradient-to-r from-zinc-800 to-zinc-900 border border-zinc-800/50 shadow-lg relative z-10 w-full xl:min-w-[420px]">
-                    <div className="bg-black/50 backdrop-blur rounded-lg px-4 py-3 flex items-center justify-between gap-4 overflow-hidden">
-                        <div className="flex items-center gap-3 min-w-0">
-                            <Terminal className="w-4 h-4 text-zinc-500 shrink-0" />
-                            <div className="overflow-x-auto no-scrollbar">
-                                <code className="font-mono text-sm text-zinc-300 select-all whitespace-nowrap">
-                                    {command}
-                                </code>
-                            </div>
+                <div className="bg-zinc-900/80 border border-zinc-800/50 rounded-lg px-4 py-3 flex items-center justify-between gap-4 overflow-hidden shadow-lg relative z-10 w-full xl:min-w-[420px]">
+                    <div className="flex items-center gap-3 min-w-0">
+                        <Terminal className="w-4 h-4 text-zinc-500 shrink-0" />
+                        <div className="overflow-x-auto no-scrollbar">
+                            <code className="font-mono text-sm text-zinc-300 select-all whitespace-nowrap">
+                                {command}
+                            </code>
                         </div>
-                        <button
-                            onClick={handleCopy}
-                            className="p-2 hover:bg-zinc-800/50 rounded-md transition-colors group shrink-0"
-                            title="Copy to clipboard"
-                        >
-                            {copied ? (
-                                <Check className="w-4 h-4 text-emerald-500" />
-                            ) : (
-                                <Copy className="w-4 h-4 text-zinc-500 group-hover:text-zinc-300" />
-                            )}
-                        </button>
                     </div>
+                    <button
+                        onClick={handleCopy}
+                        className="p-2 hover:bg-zinc-800/50 rounded-md transition-colors group shrink-0"
+                        title="Copy to clipboard"
+                    >
+                        {copied ? (
+                            <Check className="w-4 h-4 text-emerald-500" />
+                        ) : (
+                            <Copy className="w-4 h-4 text-zinc-500 group-hover:text-zinc-300" />
+                        )}
+                    </button>
                 </div>
             </div>
         </header>
