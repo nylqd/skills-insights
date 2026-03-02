@@ -18,7 +18,7 @@ export function CopyableSource({ source }: { source: string }) {
             className="flex items-center gap-1.5 text-xs text-zinc-500 hover:text-cyan-400 transition-colors group/copy relative"
             title="点击复制 Source"
         >
-            <span className="truncate max-w-[120px]">{source}</span>
+            <span className="truncate max-w-[200px]">{source}</span>
             {copied ? (
                 <Check className="w-3 h-3 text-cyan-400" />
             ) : (
