@@ -5,6 +5,13 @@ import { RowDataPacket } from "mysql2";
 export type TopSkill = { skill: string; installs: number; source: string };
 export type TopAgent = { agent: string; usages: number };
 export type GlobalMetrics = { total_installs: number; total_unique_skills: number };
+export type SearchSkillResult = {
+    id: string;
+    skillId: string;
+    name: string;
+    installs: number;
+    source: string;
+};
 
 export async function getGlobalMetrics(): Promise<GlobalMetrics> {
     await connection();
@@ -54,6 +61,32 @@ export async function getTopAgents(limit = 10): Promise<TopAgent[]> {
             [limit]
         );
         return rows as TopAgent[];
+    } catch (e: unknown) {
+        console.error(e);
+        return [];
+    }
+}
+
+export async function searchSkills(query: string, limit = 10): Promise<SearchSkillResult[]> {
+    await connection();
+    try {
+        const [rows] = await pool.query<RowDataPacket[]>(
+            `SELECT skill, MAX(source) as source, COUNT(*) as installs
+             FROM skills.telemetry_events
+             WHERE event = 'install' AND skill != '' AND skill != 'unknown'
+               AND skill LIKE ?
+             GROUP BY skill
+             ORDER BY installs DESC
+             LIMIT ?`,
+            [`%${query}%`, limit]
+        );
+        return (rows as Array<{ skill: string; source: string; installs: number }>).map((row) => ({
+            id: row.source ? `${row.source}/${row.skill}` : row.skill,
+            skillId: row.skill,
+            name: row.skill,
+            installs: row.installs,
+            source: row.source || "",
+        }));
     } catch (e: unknown) {
         console.error(e);
         return [];

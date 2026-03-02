@@ -1,6 +1,6 @@
-import { getGlobalMetrics, getTopAgents, getTopSkills, TopSkill, TopAgent } from "@/lib/queries";
+import { getGlobalMetrics, getTopAgents, getTopSkills, TopAgent } from "@/lib/queries";
 import { Terminal, Cpu, DownloadCloud, Zap } from "lucide-react";
-import { CopyableSource } from "@/components/copyable-source";
+import { SearchableSkills } from "@/components/searchable-skills";
 
 export const dynamic = 'force-dynamic';
 export default async function Home() {
@@ -36,43 +36,7 @@ export default async function Home() {
                     <h2 className="text-2xl font-semibold mb-6 flex items-center gap-2">
                         <Terminal className="w-6 h-6" /> 热门 Skills 排行榜
                     </h2>
-                    <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-2xl backdrop-blur-xl overflow-hidden p-6">
-                        {topSkills.length === 0 ? (
-                            <div className="text-center py-12 text-zinc-500">暂无数据。</div>
-                        ) : (
-                            <ul className="space-y-4">
-                                {topSkills.map((item: TopSkill, index: number) => {
-                                    // Highest count for progress bar scale
-                                    const maxInstalls = Number(topSkills[0]?.installs) || 1;
-                                    const pct = Math.max(2, (Number(item.installs) / maxInstalls) * 100);
-
-                                    return (
-                                        <li key={item.skill} className="relative group rounded-lg overflow-hidden bg-zinc-950/50 border border-zinc-800/50">
-                                            <div className="flex items-center justify-between z-10 relative px-4 py-3">
-                                                <div className="flex items-center gap-4">
-                                                    <span className="text-zinc-500 font-mono text-sm w-4">{index + 1}</span>
-                                                    <div className="flex flex-col">
-                                                        <span className="font-medium text-zinc-200 group-hover:text-white transition-colors">{item.skill}</span>
-                                                        {item.source && (
-                                                            <CopyableSource source={item.source} />
-                                                        )}
-                                                    </div>
-                                                </div>
-                                                <span className="font-mono text-zinc-400 group-hover:text-cyan-400 transition-colors">
-                                                    {Number(item.installs).toLocaleString()}
-                                                </span>
-                                            </div>
-                                            {/* Interactive Progress Bar background */}
-                                            <div
-                                                className="absolute inset-y-0 left-0 bg-cyan-950/30 group-hover:bg-cyan-900/40 transition-all duration-500 ease-out z-0"
-                                                style={{ width: `${pct}%` }}
-                                            />
-                                        </li>
-                                    );
-                                })}
-                            </ul>
-                        )}
-                    </div>
+                    <SearchableSkills initialSkills={topSkills} />
                 </section>
 
                 {/* Top Agents Panel */}
