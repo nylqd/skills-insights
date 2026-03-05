@@ -1,7 +1,7 @@
-import { getSkillFile } from "@/lib/skills-fs";
+import { getSkillFile, getSkillMeta } from "@/lib/skills-fs";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ChevronLeft, FileText, Terminal, Info } from "lucide-react";
+import { ChevronLeft, FileText, Info, ExternalLink, Clock } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import matter from "gray-matter";
@@ -27,6 +27,7 @@ export default async function SkillDetailPage(
     const { data: frontmatter, content: markdownBody } = matter(rawMarkdownContent);
     const installCommand = `skills add http://skills.sh --skill ${decodedName}`;
     const hasFrontmatter = Object.keys(frontmatter).length > 0;
+    const meta = getSkillMeta(decodedName);
 
     return (
         <main className="max-w-4xl mx-auto">
@@ -37,8 +38,32 @@ export default async function SkillDetailPage(
                 <ChevronLeft className="w-4 h-4" /> 返回 Skills 列表
             </Link>
 
-            <header className="mb-10 pb-8 border-b border-zinc-800/50">
-                <h1 className="text-3xl font-bold text-zinc-100 mb-6">{decodedName}</h1>
+            <header className="mb-6 pb-6 border-b border-zinc-800/50">
+                <h1 className="text-3xl font-bold text-zinc-100 mb-3">{decodedName}</h1>
+
+                {/* Source info bar */}
+                {meta && (meta.source_repo || meta.synced_at) && (
+                    <div className="flex flex-wrap items-center gap-2 mb-4">
+                        {meta.source_repo && (
+                            <a
+                                href={meta.source_repo.replace(/\.git$/, '')}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-cyan-950/60 text-cyan-400 border border-cyan-800/50 hover:bg-cyan-900/60 hover:border-cyan-600/50 transition-colors"
+                            >
+                                <ExternalLink className="w-3 h-3" />
+                                {meta.source_repo.replace(/^https?:\/\//, '').replace(/\.git$/, '')}
+                            </a>
+                        )}
+                        {meta.synced_at && (
+                            <span className="inline-flex items-center gap-1 text-xs text-zinc-500">
+                                <Clock className="w-3 h-3" />
+                                同步于 {new Date(meta.synced_at).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' })}
+                            </span>
+                        )}
+                    </div>
+                )}
+
                 <CopyableCommand command={installCommand} />
             </header>
 

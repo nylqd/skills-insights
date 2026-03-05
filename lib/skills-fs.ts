@@ -7,6 +7,8 @@ export interface SyncedSkill {
     name: string;
     description: string;
     files: string[];
+    source_repo?: string;
+    synced_at?: string;
 }
 
 export interface SyncedSkillsIndex {
@@ -24,6 +26,11 @@ export function getSyncedSkills(): SyncedSkill[] {
         console.error('[skills-fs] Failed to read index.json:', err);
         return [];
     }
+}
+
+export function getSkillMeta(skillName: string): SyncedSkill | null {
+    const skills = getSyncedSkills();
+    return skills.find(s => s.name === skillName) ?? null;
 }
 
 export function getSkillFile(skillName: string, filename: string): string | null {

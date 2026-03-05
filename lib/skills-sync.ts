@@ -19,6 +19,8 @@ interface SkillInfo {
     name: string;
     description: string;
     files: string[];
+    source_repo: string;
+    synced_at: string;
 }
 
 const CACHE_DIR = process.env.SKILLS_CACHE_DIR || path.join(process.cwd(), '.skills-cache');
@@ -155,6 +157,7 @@ function scanAndCopySkills(cacheDir: string, outputDir: string): SkillInfo[] {
     fs.mkdirSync(wellKnownDir, { recursive: true });
 
     const skills: SkillInfo[] = [];
+    const syncedAt = new Date().toISOString();
 
     const config = loadConfig();
     for (const repo of config.repos) {
@@ -194,6 +197,8 @@ function scanAndCopySkills(cacheDir: string, outputDir: string): SkillInfo[] {
                 name: skillName,
                 description: extractSkillDescription(skillMdPath),
                 files: sortedFiles,
+                source_repo: repo.url,
+                synced_at: syncedAt,
             });
         }
     }
@@ -206,11 +211,14 @@ function scanAndCopySkills(cacheDir: string, outputDir: string): SkillInfo[] {
 function generateIndex(skills: SkillInfo[], outputDir: string): void {
     const indexPath = path.join(outputDir, '.well-known', 'skills', 'index.json');
     // Conform to cloudflare/agent-skills-discovery-rfc
+    // source_repo and synced_at are extra fields — RFC clients will ignore them
     const index = {
         skills: skills.map(s => ({
             name: s.name,
             description: s.description,
             files: s.files,
+            source_repo: s.source_repo,
+            synced_at: s.synced_at,
         })),
     };
     fs.writeFileSync(indexPath, JSON.stringify(index, null, 2), 'utf-8');
