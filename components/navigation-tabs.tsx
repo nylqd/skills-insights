@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BookOpen, History, MessageSquare } from "lucide-react";
+import { BookOpen, History, MessageSquare, LayoutGrid } from "lucide-react";
 import { clsx } from "clsx";
 
 export function NavigationTabs() {
@@ -10,6 +10,7 @@ export function NavigationTabs() {
     const isDocs = pathname?.startsWith("/docs");
     const isChangelog = pathname?.startsWith("/changelog");
     const isFeedback = pathname?.startsWith("/feedback");
+    const isSkills = pathname?.startsWith("/skills");
     const isHome = pathname === "/";
 
     return (
@@ -28,6 +29,19 @@ export function NavigationTabs() {
                     <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                 </span>
                 大盘预览
+            </Link>
+
+            <Link
+                href="/skills"
+                className={clsx(
+                    "flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-all -mb-[1px]",
+                    isSkills
+                        ? "border-cyan-400 text-cyan-400"
+                        : "border-transparent text-zinc-400 hover:text-zinc-200 hover:border-zinc-700"
+                )}
+            >
+                <LayoutGrid className="w-4 h-4" />
+                收录 Skills
             </Link>
 
             <Link
