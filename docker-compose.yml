@@ -12,5 +12,23 @@ services:
       - mysql_data:/var/lib/mysql
     restart: always
 
+  telemetry:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - GIT_USERNAME=${GIT_USERNAME}
+      - GIT_PASSWORD=${GIT_PASSWORD}
+      - SKILLS_SYNC_INTERVAL=600000
+    volumes:
+      - skills_cache:/data/skills-cache
+      - skills_output:/data/skills-output
+      - ./repos.json:/opt/deployments/repos.json:ro
+    depends_on:
+      - mysql
+    restart: always
+
 volumes:
   mysql_data:
+  skills_cache:
+  skills_output:
