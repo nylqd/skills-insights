@@ -2,13 +2,13 @@
 
 import { useState, useEffect, useRef } from "react";
 import { Search, X, ChevronDown } from "lucide-react";
-import { CopyableSource } from "@/components/copyable-source";
+import { CopyableSourceCommands } from "@/components/copyable-source";
 
 type Skill = {
     skill: string;
     name?: string;
     installs: number;
-    source: string;
+    sources: string[];
 };
 
 const DEFAULT_VISIBLE = 10;
@@ -38,10 +38,10 @@ export function SearchableSkills({ initialSkills }: { initialSkills: Skill[] }) 
                 const res = await fetch(`/api/search?q=${encodeURIComponent(query)}&limit=50`);
                 const data = await res.json();
                 setResults(
-                    data.skills.map((s: { skillId: string; name: string; installs: number; source: string }) => ({
+                    data.skills.map((s: { skillId: string; name: string; installs: number; sources: string[] }) => ({
                         skill: s.skillId || s.name,
                         installs: s.installs,
-                        source: s.source,
+                        sources: s.sources || [],
                     }))
                 );
             } catch {
@@ -93,7 +93,7 @@ export function SearchableSkills({ initialSkills }: { initialSkills: Skill[] }) 
                                     <span className="text-zinc-600 font-mono text-xs w-5 text-right shrink-0">{index + 1}</span>
                                     <div className="flex flex-col gap-0.5 min-w-0">
                                         <span className="text-sm font-medium text-zinc-200 group-hover:text-white transition-colors truncate">{item.skill}</span>
-                                        {item.source && <CopyableSource source={item.source} />}
+                                        {item.sources && item.sources.length > 0 && <CopyableSourceCommands sources={item.sources} skill={item.skill} />}
                                     </div>
                                 </div>
                                 <span className="text-sm font-mono text-zinc-500 group-hover:text-cyan-400 transition-colors tabular-nums shrink-0 ml-3">

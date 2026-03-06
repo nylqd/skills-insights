@@ -2,7 +2,7 @@ import { connection } from "next/server";
 import { pool } from "@/lib/db";
 import { RowDataPacket } from "mysql2";
 
-export type TopSkill = { skill: string; installs: number; source: string };
+export type TopSkill = { skill: string; installs: number; sources: string[] };
 export type TopAgent = { agent: string; usages: number };
 export type GlobalMetrics = { total_installs: number; total_unique_skills: number };
 export type SearchSkillResult = {
@@ -10,7 +10,7 @@ export type SearchSkillResult = {
     skillId: string;
     name: string;
     installs: number;
-    source: string;
+    sources: string[];
 };
 
 export async function getGlobalMetrics(): Promise<GlobalMetrics> {
@@ -33,7 +33,7 @@ export async function getTopSkills(limit = 10): Promise<TopSkill[]> {
     await connection();
     try {
         const [rows] = await pool.query<RowDataPacket[]>(
-            `SELECT skill, MAX(source) as source, COUNT(*) as installs
+            `SELECT skill, GROUP_CONCAT(DISTINCT source SEPARATOR '||') as sources, COUNT(*) as installs
              FROM skills.telemetry_events
              WHERE event = 'install' AND skill != '' AND skill != 'unknown'
              GROUP BY skill
@@ -41,7 +41,11 @@ export async function getTopSkills(limit = 10): Promise<TopSkill[]> {
              LIMIT ?`,
             [limit]
         );
-        return rows as TopSkill[];
+        return (rows as Array<{ skill: string; sources: string; installs: number }>).map((row) => ({
+            skill: row.skill,
+            installs: row.installs,
+            sources: row.sources ? row.sources.split('||').filter(Boolean) : [],
+        }));
     } catch (e: unknown) {
         console.error(e);
         return [];
@@ -71,7 +75,7 @@ export async function searchSkills(query: string, limit = 10): Promise<SearchSki
     await connection();
     try {
         const [rows] = await pool.query<RowDataPacket[]>(
-            `SELECT skill, MAX(source) as source, COUNT(*) as installs
+            `SELECT skill, GROUP_CONCAT(DISTINCT source SEPARATOR '||') as sources, COUNT(*) as installs
              FROM skills.telemetry_events
              WHERE event = 'install' AND skill != '' AND skill != 'unknown'
                AND skill LIKE ?
@@ -80,13 +84,16 @@ export async function searchSkills(query: string, limit = 10): Promise<SearchSki
              LIMIT ?`,
             [`%${query}%`, limit]
         );
-        return (rows as Array<{ skill: string; source: string; installs: number }>).map((row) => ({
-            id: row.source ? `${row.source}/${row.skill}` : row.skill,
-            skillId: row.skill,
-            name: row.skill,
-            installs: row.installs,
-            source: row.source || "",
-        }));
+        return (rows as Array<{ skill: string; sources: string; installs: number }>).map((row) => {
+            const sources = row.sources ? row.sources.split('||').filter(Boolean) : [];
+            return {
+                id: sources.length > 0 ? `${sources[0]}/${row.skill}` : row.skill,
+                skillId: row.skill,
+                name: row.skill,
+                installs: row.installs,
+                sources,
+            };
+        });
     } catch (e: unknown) {
         console.error(e);
         return [];
