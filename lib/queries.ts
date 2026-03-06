@@ -10,7 +10,7 @@ export type SearchSkillResult = {
     skillId: string;
     name: string;
     installs: number;
-    sources: string[];
+    source: string;
 };
 
 export async function getGlobalMetrics(): Promise<GlobalMetrics> {
@@ -75,25 +75,22 @@ export async function searchSkills(query: string, limit = 10): Promise<SearchSki
     await connection();
     try {
         const [rows] = await pool.query<RowDataPacket[]>(
-            `SELECT skill, GROUP_CONCAT(DISTINCT source SEPARATOR '||') as sources, COUNT(*) as installs
+            `SELECT skill, source, COUNT(*) as installs
              FROM skills.telemetry_events
              WHERE event = 'install' AND skill != '' AND skill != 'unknown'
                AND skill LIKE ?
-             GROUP BY skill
+             GROUP BY skill, source
              ORDER BY installs DESC
              LIMIT ?`,
             [`%${query}%`, limit]
         );
-        return (rows as Array<{ skill: string; sources: string; installs: number }>).map((row) => {
-            const sources = row.sources ? row.sources.split('||').filter(Boolean) : [];
-            return {
-                id: sources.length > 0 ? `${sources[0]}/${row.skill}` : row.skill,
-                skillId: row.skill,
-                name: row.skill,
-                installs: row.installs,
-                sources,
-            };
-        });
+        return (rows as Array<{ skill: string; source: string; installs: number }>).map((row) => ({
+            id: row.source ? `${row.source}/${row.skill}` : row.skill,
+            skillId: row.skill,
+            name: row.skill,
+            installs: row.installs,
+            source: row.source || "",
+        }));
     } catch (e: unknown) {
         console.error(e);
         return [];

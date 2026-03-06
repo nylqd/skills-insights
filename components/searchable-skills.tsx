@@ -38,10 +38,10 @@ export function SearchableSkills({ initialSkills }: { initialSkills: Skill[] }) 
                 const res = await fetch(`/api/search?q=${encodeURIComponent(query)}&limit=50`);
                 const data = await res.json();
                 setResults(
-                    data.skills.map((s: { skillId: string; name: string; installs: number; sources: string[] }) => ({
+                    data.skills.map((s: { skillId: string; name: string; installs: number; source: string }) => ({
                         skill: s.skillId || s.name,
                         installs: s.installs,
-                        sources: s.sources || [],
+                        sources: s.source ? [s.source] : [],
                     }))
                 );
             } catch {
@@ -88,7 +88,7 @@ export function SearchableSkills({ initialSkills }: { initialSkills: Skill[] }) 
                 ) : (
                     <ul className="divide-y divide-zinc-800/40">
                         {displaySkills.map((item, index) => (
-                            <li key={item.skill} className="group flex items-center justify-between px-4 py-2.5 hover:bg-zinc-800/20 transition-colors">
+                            <li key={`${item.skill}-${item.sources.join(',')}`} className="group flex items-center justify-between px-4 py-2.5 hover:bg-zinc-800/20 transition-colors">
                                 <div className="flex items-center gap-3 min-w-0">
                                     <span className="text-zinc-600 font-mono text-xs w-5 text-right shrink-0">{index + 1}</span>
                                     <div className="flex flex-col gap-0.5 min-w-0">
