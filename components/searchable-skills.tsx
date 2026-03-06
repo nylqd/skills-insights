@@ -9,6 +9,7 @@ type Skill = {
     name?: string;
     installs: number;
     sources: string[];
+    sourceInstalls?: Record<string, number>;
 };
 
 const DEFAULT_VISIBLE = 10;
@@ -93,7 +94,7 @@ export function SearchableSkills({ initialSkills }: { initialSkills: Skill[] }) 
                                     <span className="text-zinc-600 font-mono text-xs w-5 text-right shrink-0">{index + 1}</span>
                                     <div className="flex flex-col gap-0.5 min-w-0">
                                         <span className="text-sm font-medium text-zinc-200 group-hover:text-white transition-colors truncate">{item.skill}</span>
-                                        {item.sources && item.sources.length > 0 && <CopyableSourceCommands sources={item.sources} skill={item.skill} />}
+                                        {item.sources && item.sources.length > 0 && <CopyableSourceCommands sources={item.sources} skill={item.skill} sourceInstalls={item.sourceInstalls} />}
                                     </div>
                                 </div>
                                 <span className="text-sm font-mono text-zinc-500 group-hover:text-cyan-400 transition-colors tabular-nums shrink-0 ml-3">

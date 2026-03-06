@@ -2,7 +2,7 @@ import { connection } from "next/server";
 import { pool } from "@/lib/db";
 import { RowDataPacket } from "mysql2";
 
-export type TopSkill = { skill: string; installs: number; sources: string[] };
+export type TopSkill = { skill: string; installs: number; sources: string[]; sourceInstalls: Record<string, number> };
 export type TopAgent = { agent: string; usages: number };
 export type GlobalMetrics = { total_installs: number; total_unique_skills: number };
 export type SearchSkillResult = {
@@ -32,20 +32,44 @@ export async function getGlobalMetrics(): Promise<GlobalMetrics> {
 export async function getTopSkills(limit = 10): Promise<TopSkill[]> {
     await connection();
     try {
+        // Query per-source installs, then aggregate in JS
         const [rows] = await pool.query<RowDataPacket[]>(
-            `SELECT skill, GROUP_CONCAT(DISTINCT source SEPARATOR '||') as sources, COUNT(*) as installs
+            `SELECT skill, source, COUNT(*) as installs
              FROM skills.telemetry_events
              WHERE event = 'install' AND skill != '' AND skill != 'unknown'
-             GROUP BY skill
-             ORDER BY installs DESC
-             LIMIT ?`,
-            [limit]
+             GROUP BY skill, source
+             ORDER BY installs DESC`,
         );
-        return (rows as Array<{ skill: string; sources: string; installs: number }>).map((row) => ({
-            skill: row.skill,
-            installs: row.installs,
-            sources: row.sources ? row.sources.split('||').filter(Boolean) : [],
-        }));
+
+        // Aggregate by skill
+        const skillMap = new Map<string, { installs: number; sources: string[]; sourceInstalls: Record<string, number> }>();
+        for (const row of rows as Array<{ skill: string; source: string; installs: number }>) {
+            const existing = skillMap.get(row.skill);
+            if (existing) {
+                existing.installs += row.installs;
+                if (row.source && !existing.sources.includes(row.source)) {
+                    existing.sources.push(row.source);
+                }
+                if (row.source) {
+                    existing.sourceInstalls[row.source] = row.installs;
+                }
+            } else {
+                skillMap.set(row.skill, {
+                    installs: row.installs,
+                    sources: row.source ? [row.source] : [],
+                    sourceInstalls: row.source ? { [row.source]: row.installs } : {},
+                });
+            }
+        }
+
+        // Sort by total installs and take top N
+        return Array.from(skillMap.entries())
+            .sort((a, b) => b[1].installs - a[1].installs)
+            .slice(0, limit)
+            .map(([skill, data]) => ({
+                skill,
+                ...data,
+            }));
     } catch (e: unknown) {
         console.error(e);
         return [];

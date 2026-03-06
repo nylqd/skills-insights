@@ -22,13 +22,13 @@ function CopyableCommand({ command, label }: { command: string; label: string })
     return (
         <button
             onClick={onCopy}
-            className="flex items-center gap-1.5 text-xs text-zinc-500 hover:text-cyan-400 transition-colors group/copy"
+            className="flex items-center gap-1.5 text-xs text-zinc-500 hover:text-cyan-400 transition-colors group/copy min-w-0"
             title={`复制 ${label} 命令`}
         >
             <span className="inline-flex items-center gap-1 font-mono shrink-0">
-                <span className="text-zinc-600 bg-zinc-800/60 px-1 py-0.5 rounded text-[10px] leading-none">{label}</span>
+                <span className="w-10 text-center text-zinc-600 bg-zinc-800/60 px-1 py-0.5 rounded text-[10px] leading-none">{label}</span>
             </span>
-            <span className="break-all">{command}</span>
+            <span className="truncate">{command}</span>
             {copied ? (
                 <Check className="w-3 h-3 text-cyan-400 shrink-0" />
             ) : (
@@ -38,17 +38,23 @@ function CopyableCommand({ command, label }: { command: string; label: string })
     );
 }
 
-export function CopyableSourceCommands({ sources, skill }: { sources: string[]; skill: string }) {
+export function CopyableSourceCommands({ sources, skill, sourceInstalls }: { sources: string[]; skill: string; sourceInstalls?: Record<string, number> }) {
     if (!sources || sources.length === 0) return null;
 
     return (
         <div className="flex flex-col gap-0.5">
             {sources.map((source) => (
-                <CopyableCommand
-                    key={source}
-                    command={`skills add ${source} --skill ${skill}`}
-                    label={getProtocolLabel(source)}
-                />
+                <div key={source} className="flex items-center gap-1.5 min-w-0">
+                    {sourceInstalls && sourceInstalls[source] !== undefined && (
+                        <span className="w-8 text-right text-[10px] font-mono text-cyan-400/70 bg-cyan-950/40 border border-cyan-800/30 px-1.5 py-0.5 rounded leading-none tabular-nums shrink-0">
+                            {Number(sourceInstalls[source]).toLocaleString()}
+                        </span>
+                    )}
+                    <CopyableCommand
+                        command={`skills add ${source} --skill ${skill}`}
+                        label={getProtocolLabel(source)}
+                    />
+                </div>
             ))}
         </div>
     );
