@@ -26,7 +26,10 @@ export default async function DocPage(props: { params: Promise<{ slug: string[] 
           prose-pre:bg-zinc-900/80 prose-pre:border prose-pre:border-zinc-800
           prose-strong:text-zinc-200">
             <h1>{doc.meta.title}</h1>
-            <p className="text-zinc-500 mb-8 border-b border-zinc-800/50 pb-8">{doc.meta.description}</p>
+            <div className="text-zinc-400 mb-8 border-b border-zinc-800/50 pb-6 flex flex-col gap-1">
+                {doc.meta.date && <time dateTime={doc.meta.date as string} className="text-sm">{doc.meta.date as string}</time>}
+                {doc.meta.description && <span className="text-zinc-500">{doc.meta.description}</span>}
+            </div>
             <ReactMarkdown remarkPlugins={[remarkGfm]}>
                 {doc.content}
             </ReactMarkdown>
