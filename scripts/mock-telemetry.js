@@ -11,11 +11,13 @@ async function runMocks() {
     "clickhouse-guru": ["git@gitee.example.com:team/data-skills.git"],
     "nextjs-wizard": ["https://github.com/vercel-labs/skills.git", "git@github.com:vercel-labs/skills.git"],
     "tailwind-master1": ["https://github.com/vercel-labs/agent-skills.git"],
-    "clickhouse-guru1": ["git@gitee.example.com:team/data-skills.git", "https://gitee.example.com/team/data-skills.git"],
+    "clickhouse-guru1": ["git@gitee.example.com:team/data-skills.git", "https://gitee.example.com/teamitee.example.com/teamitee.example.com/teamitee.example.com/teamitee.example.com/teamitee.example.com/teamitee.example.com/teamitee.example.com/team/data-skills.git"],
     "nextjs-wizard1": ["https://github.com/vercel-labs/skills.git"],
     "tailwind-master2": ["https://github.com/vercel-labs/agent-skills.git"],
     "clickhouse-guru2": ["https://gitee.example.com/team/data-skills.git"],
     "nextjs-wizard2": ["https://github.com/vercel-labs/skills.git"],
+    "super-long-source-skill": ["https://gitlab.internal.very-long-company-name.example.com/organization/department/team-alpha/shared-resources/agent-skills-collection.git", "git@gitlab.internal.very-long-company-name.example.com:organization/department/team-alpha/shared-resources/agent-skills-collection.git"],
+    "another-long-one": ["https://gitee.example.com/super-long-organization-name/extremely-detailed-repository-name-for-skills.git", "git@gitee.example.com:super-long-organization-name/extremely-detailed-repository-name-for-skills.git", "https://github.com/another-very-long-org/yet-another-long-repo-name-skills.git"],
   };
 
   const SKILLS = Object.keys(SKILL_SOURCES);
@@ -24,7 +26,7 @@ async function runMocks() {
   console.log("🚀 Starting mock telemetry ingestion...");
   console.log(`   ${SKILLS.length} skills, some with multiple sources (SSH + HTTPS)`);
 
-  for (let i = 0; i < 80; i++) {
+  for (let i = 0; i < 2000; i++) {
     // Pick 1-3 random skills
     const numSkills = Math.floor(Math.random() * 3) + 1;
     const selectedSkills = [];

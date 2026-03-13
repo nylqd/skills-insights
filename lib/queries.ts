@@ -12,6 +12,14 @@ export type SearchSkillResult = {
     installs: number;
     source: string;
 };
+export type SubmittedRepo = {
+    id: number;
+    url: string;
+    branch: string;
+    status: 'pending' | 'approved' | 'rejected';
+    created_at: string;
+    last_sync_at: string | null;
+};
 
 export async function getGlobalMetrics(): Promise<GlobalMetrics> {
     await connection();
@@ -115,6 +123,21 @@ export async function searchSkills(query: string, limit = 10): Promise<SearchSki
             installs: row.installs,
             source: row.source || "",
         }));
+    } catch (e: unknown) {
+        console.error(e);
+        return [];
+    }
+}
+
+export async function getSubmittedRepos(): Promise<SubmittedRepo[]> {
+    await connection();
+    try {
+        const [rows] = await pool.query<RowDataPacket[]>(
+            `SELECT id, url, branch, status, created_at, last_sync_at
+             FROM skills.skill_repos
+             ORDER BY created_at DESC`
+        );
+        return rows as SubmittedRepo[];
     } catch (e: unknown) {
         console.error(e);
         return [];

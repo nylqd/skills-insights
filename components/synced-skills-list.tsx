@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Search, X, Package } from "lucide-react";
+import { Search, X, Package, GitMerge } from "lucide-react";
 import Link from "next/link";
 import type { SyncedSkill } from "@/lib/skills-fs";
 
@@ -17,6 +17,17 @@ export function SyncedSkillsList({ skills }: { skills: SyncedSkill[] }) {
                 s.description.toLowerCase().includes(q)
         );
     }, [query, skills]);
+    const groupedSkills = useMemo(() => {
+        const groups = new Map<string, SyncedSkill[]>();
+        for (const skill of filteredSkills) {
+            const repo = skill.source_repo || "Local / Unknown Sources";
+            if (!groups.has(repo)) {
+                groups.set(repo, []);
+            }
+            groups.get(repo)!.push(skill);
+        }
+        return Array.from(groups.entries());
+    }, [filteredSkills]);
 
     return (
         <div>
@@ -40,37 +51,50 @@ export function SyncedSkillsList({ skills }: { skills: SyncedSkill[] }) {
                 )}
             </div>
 
-            {/* Results Grid */}
+            {/* Results Grid by Repo */}
             {filteredSkills.length === 0 ? (
                 <div className="text-center py-16 bg-zinc-900/30 border border-zinc-800/50 rounded-xl backdrop-blur-sm">
                     <p className="text-zinc-500 text-sm">未找到与 &quot;{query}&quot; 相关的 Skills</p>
                 </div>
             ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {filteredSkills.map((skill) => (
-                        <Link
-                            key={skill.name}
-                            href={`/skills/${encodeURIComponent(skill.name)}`}
-                            className="bg-zinc-900/40 border border-zinc-800/60 rounded-xl p-5 hover:bg-zinc-800/40 hover:border-zinc-700/60 transition-all flex flex-col group cursor-pointer"
-                        >
-                            <div className="flex items-center gap-3 mb-3">
-                                <div className="p-2 bg-zinc-950/80 rounded-lg border border-zinc-800/80 group-hover:border-zinc-700 transition-colors">
-                                    <Package className="w-5 h-5 text-cyan-400/80" />
-                                </div>
-                                <h3 className="text-base font-semibold text-zinc-200 group-hover:text-cyan-400 transition-colors truncate">
-                                    {skill.name}
-                                </h3>
-                            </div>
-                            <p className="text-sm text-zinc-400 line-clamp-2 leading-relaxed flex-grow">
-                                {skill.description || "无描述信息"}
-                            </p>
-                            <div className="mt-4 pt-4 border-t border-zinc-800/50 flex items-center justify-between text-xs text-zinc-500">
-                                <span>{skill.files.length} 个文件</span>
-                                <span className="text-cyan-500/0 group-hover:text-cyan-500 transition-colors flex items-center gap-1">
-                                    查看详情 &rarr;
+                <div className="space-y-10">
+                    {groupedSkills.map(([repoUrl, repoSkills]) => (
+                        <div key={repoUrl} className="space-y-4">
+                            <h2 className="text-lg font-semibold flex items-center gap-2 text-zinc-300 pb-2 border-b border-zinc-800/60">
+                                <GitMerge className="w-5 h-5 text-zinc-500" />
+                                {repoUrl}
+                                <span className="text-sm font-normal text-zinc-500 ml-auto bg-zinc-900/50 px-2 py-0.5 rounded-full border border-zinc-800">
+                                    {repoSkills.length} Skills
                                 </span>
+                            </h2>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                {repoSkills.map((skill) => (
+                                    <Link
+                                        key={skill.name}
+                                        href={`/skills/${encodeURIComponent(skill.name)}`}
+                                        className="bg-zinc-900/40 border border-zinc-800/60 rounded-xl p-5 hover:bg-zinc-800/40 hover:border-zinc-700/60 transition-all flex flex-col group cursor-pointer"
+                                    >
+                                        <div className="flex items-center gap-3 mb-3">
+                                            <div className="p-2 bg-zinc-950/80 rounded-lg border border-zinc-800/80 group-hover:border-zinc-700 transition-colors">
+                                                <Package className="w-5 h-5 text-cyan-400/80" />
+                                            </div>
+                                            <h3 className="text-base font-semibold text-zinc-200 group-hover:text-cyan-400 transition-colors truncate">
+                                                {skill.name}
+                                            </h3>
+                                        </div>
+                                        <p className="text-sm text-zinc-400 line-clamp-2 leading-relaxed flex-grow">
+                                            {skill.description || "无描述信息"}
+                                        </p>
+                                        <div className="mt-4 pt-4 border-t border-zinc-800/50 flex items-center justify-between text-xs text-zinc-500">
+                                            <span>{skill.files.length} 个文件</span>
+                                            <span className="text-cyan-500/0 group-hover:text-cyan-500 transition-colors flex items-center gap-1">
+                                                查看详情 &rarr;
+                                            </span>
+                                        </div>
+                                    </Link>
+                                ))}
                             </div>
-                        </Link>
+                        </div>
                     ))}
                 </div>
             )}

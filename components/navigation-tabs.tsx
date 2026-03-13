@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BookOpen, History, MessageSquare, LayoutGrid } from "lucide-react";
+import { BookOpen, History, MessageSquare, LayoutGrid, PlusCircle } from "lucide-react";
 import { clsx } from "clsx";
 
 export function NavigationTabs() {
@@ -11,6 +11,7 @@ export function NavigationTabs() {
     const isChangelog = pathname?.startsWith("/changelog");
     const isFeedback = pathname?.startsWith("/feedback");
     const isSkills = pathname?.startsWith("/skills");
+    const isSubmit = pathname?.startsWith("/submit");
     const isHome = pathname === "/";
 
     return (
@@ -81,6 +82,19 @@ export function NavigationTabs() {
             >
                 <MessageSquare className="w-4 h-4" />
                 反馈意见
+            </Link>
+
+            <Link
+                href="/submit"
+                className={clsx(
+                    "flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-all -mb-[1px]",
+                    isSubmit
+                        ? "border-cyan-400 text-cyan-400"
+                        : "border-transparent text-zinc-400 hover:text-zinc-200 hover:border-zinc-700"
+                )}
+            >
+                <PlusCircle className="w-4 h-4" />
+                提交仓库
             </Link>
         </div>
     );

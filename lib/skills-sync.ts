@@ -1,6 +1,8 @@
 import { execSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
+import { pool } from './db';
+import { RowDataPacket } from 'mysql2';
 
 // --- Configuration ---
 
@@ -41,27 +43,27 @@ function getAuthedUrl(repoUrl: string): string {
 
 // --- Config Loading ---
 
-function loadConfig(): SyncConfig {
-    // Look for repos.json in several locations
-    const candidates = [
-        path.join(process.cwd(), 'repos.json'),
-        '/opt/deployments/repos.json',
-    ];
+async function loadConfig(): Promise<SyncConfig> {
+    const config: SyncConfig = { repos: [] };
 
-    for (const p of candidates) {
-        if (fs.existsSync(p)) {
-            const raw = fs.readFileSync(p, 'utf-8');
-            return JSON.parse(raw) as SyncConfig;
+    try {
+        const [rows] = await pool.query<RowDataPacket[]>(
+            `SELECT url, branch FROM skills.skill_repos WHERE status = 'approved'`
+        );
+        for (const row of rows) {
+            config.repos.push({ url: row.url, branch: row.branch });
         }
+        console.log(`[skills-sync] Loaded ${config.repos.length} approved repos from database`);
+    } catch (err) {
+        console.error('[skills-sync] Failed to load repos from database:', err);
     }
 
-    console.warn('[skills-sync] No repos.json found, skipping sync');
-    return { repos: [] };
+    return config;
 }
 
 // --- Git Operations ---
 
-function cloneOrPull(repo: RepoConfig, cacheDir: string): void {
+function cloneOrPull(repo: RepoConfig, cacheDir: string): boolean {
     const name = path.basename(repo.url, '.git');
     const repoDir = path.join(cacheDir, name);
     const authedUrl = getAuthedUrl(repo.url);
@@ -85,8 +87,10 @@ function cloneOrPull(repo: RepoConfig, cacheDir: string): void {
                 { stdio: 'pipe', timeout: 120_000 }
             );
         }
+        return true;
     } catch (err) {
         console.error(`[skills-sync] Failed to sync ${name}:`, err instanceof Error ? err.message : err);
+        return false;
     }
 }
 
@@ -148,7 +152,7 @@ function listFilesRecursive(dir: string): string[] {
 
 // --- Scan & Copy ---
 
-function scanAndCopySkills(cacheDir: string, outputDir: string): SkillInfo[] {
+async function scanAndCopySkills(cacheDir: string, outputDir: string): Promise<SkillInfo[]> {
     const wellKnownDir = path.join(outputDir, '.well-known', 'skills');
     // Clean output dir
     if (fs.existsSync(outputDir)) {
@@ -159,7 +163,7 @@ function scanAndCopySkills(cacheDir: string, outputDir: string): SkillInfo[] {
     const skills: SkillInfo[] = [];
     const syncedAt = new Date().toISOString();
 
-    const config = loadConfig();
+    const config = await loadConfig();
     for (const repo of config.repos) {
         const repoName = path.basename(repo.url, '.git');
         const scanRoot = repo.subpath
@@ -229,7 +233,7 @@ function generateIndex(skills: SkillInfo[], outputDir: string): void {
 
 export async function syncAll(): Promise<void> {
     console.log('[skills-sync] Starting sync...');
-    const config = loadConfig();
+    const config = await loadConfig();
 
     if (config.repos.length === 0) {
         console.log('[skills-sync] No repos configured, skipping');
@@ -238,11 +242,21 @@ export async function syncAll(): Promise<void> {
 
     // 1. Clone/pull all repos
     for (const repo of config.repos) {
-        cloneOrPull(repo, CACHE_DIR);
+        const success = cloneOrPull(repo, CACHE_DIR);
+        if (success) {
+            try {
+                await pool.execute(
+                    `UPDATE skills.skill_repos SET last_sync_at = NOW() WHERE url = ?`,
+                    [repo.url]
+                );
+            } catch (dbErr) {
+                console.error(`[skills-sync] Failed to update last_sync_at for ${repo.url}`, dbErr);
+            }
+        }
     }
 
     // 2. Scan and copy skills
-    const skills = scanAndCopySkills(CACHE_DIR, OUTPUT_DIR);
+    const skills = await scanAndCopySkills(CACHE_DIR, OUTPUT_DIR);
 
     // 3. Generate index
     generateIndex(skills, OUTPUT_DIR);
@@ -261,7 +275,7 @@ export function startSyncLoop(): void {
         }
 
         // Read interval dynamically for the next run so config changes apply without restart
-        const config = loadConfig();
+        const config = await loadConfig();
         const nextInterval = config.interval_ms || SYNC_INTERVAL;
         console.log(`[skills-sync] Next sync in ${nextInterval}ms...`);
         setTimeout(runLoop, nextInterval);
