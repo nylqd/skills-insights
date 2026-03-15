@@ -3,6 +3,7 @@ import './globals.css'
 
 import { Header } from '@/components/header'
 import { NavigationTabs } from '@/components/navigation-tabs'
+import { getSyncedSkills } from '@/lib/skills-fs'
 
 export const metadata: Metadata = {
     title: 'Skills Insights',
@@ -12,7 +13,7 @@ export const metadata: Metadata = {
     },
 }
 
-export default function RootLayout({
+export default async function RootLayout({
     children,
 }: {
     children: React.ReactNode
@@ -27,7 +28,7 @@ export default function RootLayout({
 
                 <div className="max-w-6xl mx-auto px-6 md:px-8 py-12 md:py-16 relative z-10 w-full">
                     <Header />
-                    <NavigationTabs />
+                    <NavigationTabs syncedSkillsCount={getSyncedSkills().length} />
                     {children}
                 </div>
             </body>

@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { BookOpen, History, MessageSquare, LayoutGrid, HeartHandshake } from "lucide-react";
 import { clsx } from "clsx";
 
-export function NavigationTabs() {
+export function NavigationTabs({ syncedSkillsCount }: { syncedSkillsCount?: number }) {
     const pathname = usePathname();
     const isDocs = pathname?.startsWith("/docs");
     const isChangelog = pathname?.startsWith("/changelog");
@@ -43,6 +43,11 @@ export function NavigationTabs() {
             >
                 <LayoutGrid className="w-4 h-4" />
                 收录 Skills
+                {syncedSkillsCount != null && syncedSkillsCount > 0 && (
+                    <span className="ml-1 px-1.5 py-0.5 text-[10px] font-bold leading-none rounded-full bg-cyan-500/15 text-cyan-400 border border-cyan-500/20">
+                        {syncedSkillsCount}
+                    </span>
+                )}
             </Link>
 
             <Link

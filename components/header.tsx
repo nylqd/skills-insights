@@ -1,24 +1,67 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Terminal, Copy, Check } from "lucide-react";
 import Link from "next/link";
 import { useCopy } from "@/lib/use-copy";
-import { motion, AnimatePresence } from "framer-motion";
 
 const ROTATING_WORDS = ["Insights", "Hub", "Radar", "Pulse"];
+const TYPE_SPEED = 100;
+const DELETE_SPEED = 60;
+const PAUSE_AFTER_TYPE = 2000;
+const PAUSE_AFTER_DELETE = 400;
 
 export function Header() {
     const { copied, copy } = useCopy();
     const command = "curl -sL https://skills.sh | bash";
-    const [wordIndex, setWordIndex] = useState(0);
+    const [displayText, setDisplayText] = useState("");
+    const [tick, setTick] = useState(0);
+    const phase = useRef<"typing" | "paused" | "deleting" | "waiting">("typing");
+    const wordIdx = useRef(0);
+    const charIdx = useRef(0);
 
     useEffect(() => {
-        const interval = setInterval(() => {
-            setWordIndex((prev) => (prev + 1) % ROTATING_WORDS.length);
-        }, 3000);
-        return () => clearInterval(interval);
-    }, []);
+        let delay: number;
+        const currentWord = ROTATING_WORDS[wordIdx.current] || "";
+
+        switch (phase.current) {
+            case "typing":
+                if (charIdx.current < currentWord.length) {
+                    charIdx.current++;
+                    setDisplayText(currentWord.slice(0, charIdx.current));
+                    delay = TYPE_SPEED;
+                } else {
+                    phase.current = "paused";
+                    delay = PAUSE_AFTER_TYPE;
+                }
+                break;
+            case "paused":
+                phase.current = "deleting";
+                delay = 0;
+                break;
+            case "deleting":
+                if (charIdx.current > 0) {
+                    charIdx.current--;
+                    setDisplayText(currentWord.slice(0, charIdx.current));
+                    delay = DELETE_SPEED;
+                } else {
+                    phase.current = "waiting";
+                    delay = PAUSE_AFTER_DELETE;
+                }
+                break;
+            case "waiting":
+            default:
+                wordIdx.current = (wordIdx.current + 1) % ROTATING_WORDS.length;
+                phase.current = "typing";
+                delay = 0;
+                break;
+        }
+
+        const timer = setTimeout(() => {
+            setTick((t) => t + 1);
+        }, delay);
+        return () => clearTimeout(timer);
+    }, [tick]);
 
     const handleCopy = () => copy(command);
 
@@ -26,21 +69,14 @@ export function Header() {
         <header className="mb-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-8 w-full">
             <div className="text-center sm:text-left">
                 <Link href="/" className="block">
-                    <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight text-white mb-4 hover:opacity-90 transition-opacity flex items-center justify-center sm:justify-start">
-                        <span className="pb-2">Skills</span>
-                        <span className="ml-[0.3em] inline-flex items-center relative h-[1.2em] min-w-[5em]">
-                            <AnimatePresence mode="popLayout">
-                                <motion.span
-                                    key={wordIndex}
-                                    initial={{ opacity: 0, y: "50%", filter: "blur(4px)" }}
-                                    animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                                    exit={{ opacity: 0, y: "-50%", filter: "blur(4px)" }}
-                                    transition={{ duration: 0.4, ease: "easeOut" }}
-                                    className="absolute left-0 inline-block text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-indigo-400 pb-2 whitespace-nowrap"
-                                >
-                                    {ROTATING_WORDS[wordIndex]}
-                                </motion.span>
-                            </AnimatePresence>
+                    <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight text-white mb-4 hover:opacity-90 transition-opacity flex items-center justify-center sm:justify-start leading-[1.2]">
+                        <span className="pb-4">Skills</span>
+                        <span className="px-1.5 pb-4 text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-indigo-400 select-none">/</span>
+                        <span className="inline-flex items-baseline pb-4">
+                            <span className="inline-block text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-indigo-400 whitespace-nowrap px-0.5 pb-1 min-h-[1em]">
+                                {displayText || "\u200B"}
+                            </span>
+                            <span className="inline-block w-[3px] h-[0.75em] bg-cyan-400 ml-[2px] rounded-sm animate-blink align-baseline translate-y-[0.05em]" />
                         </span>
                     </h1>
                 </Link>
@@ -56,10 +92,7 @@ export function Header() {
                     <div className="w-16 h-16 shrink-0 relative flex justify-center items-center">
                         <img src="/qr.png" alt="QR Code Thumbnail" className="w-full h-full object-cover rounded-xl border border-zinc-700/30 group-hover/qr:opacity-90 transition-opacity duration-300" />
 
-                        {/* Popup QR: 起点在左下角，并且向左下方展开。
-                            使用 top-full 贴着底边，right-full 贴着左边 (两者交点即为盒子的左下角外沿)。
-                            使用 origin-top-right 表示以它自身的右上角为基点展开（即：往坐标系的原点左下方放大）。
-                        */}
+                        {/* Popup QR */}
                         <div className="absolute top-full right-full mt-2 mr-2 origin-top-right opacity-0 invisible group-hover/qr:opacity-100 group-hover/qr:visible scale-50 group-hover/qr:scale-100 transition-all duration-300 ease-out pointer-events-none z-50">
                             <div className="bg-white p-2.5 rounded-2xl shadow-2xl border border-zinc-200">
                                 <img src="/qr.png" alt="QR Code Large" className="w-48 h-auto max-w-none object-cover rounded-xl" />
@@ -77,7 +110,11 @@ export function Header() {
                     </div>
                 </div>
 
-                <div className="bg-zinc-900/80 border border-zinc-800/50 rounded-lg px-4 py-3 flex items-center justify-between gap-4 overflow-hidden shadow-lg relative z-10 w-full xl:min-w-[420px]">
+                <button
+                    onClick={handleCopy}
+                    className="bg-zinc-900/80 border border-zinc-800/50 rounded-lg px-4 py-3 flex items-center justify-between gap-4 overflow-hidden shadow-lg relative z-10 w-full xl:min-w-[420px] cursor-pointer hover:bg-zinc-800/60 hover:border-zinc-700/50 transition-all group/cmd"
+                    title="Click to copy"
+                >
                     <div className="flex items-center gap-3 min-w-0">
                         <Terminal className="w-4 h-4 text-zinc-500 shrink-0" />
                         <div className="overflow-x-auto no-scrollbar">
@@ -86,19 +123,16 @@ export function Header() {
                             </code>
                         </div>
                     </div>
-                    <button
-                        onClick={handleCopy}
-                        className="p-2 hover:bg-zinc-800/50 rounded-md transition-colors group shrink-0"
-                        title="Copy to clipboard"
-                    >
+                    <div className="p-2 shrink-0">
                         {copied ? (
                             <Check className="w-4 h-4 text-emerald-500" />
                         ) : (
-                            <Copy className="w-4 h-4 text-zinc-500 group-hover:text-zinc-300" />
+                            <Copy className="w-4 h-4 text-zinc-500 group-hover/cmd:text-zinc-300 transition-colors" />
                         )}
-                    </button>
-                </div>
+                    </div>
+                </button>
             </div>
         </header>
     );
 }
+

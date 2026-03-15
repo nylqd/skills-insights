@@ -1,48 +1,32 @@
 import { getGlobalMetrics, getTopAgents, getTopSkills, TopAgent } from "@/lib/queries";
-import { Terminal, Cpu, DownloadCloud, Zap } from "lucide-react";
+import { Terminal, Cpu } from "lucide-react";
 import { SearchableSkills } from "@/components/searchable-skills";
+import { getSyncedSkills } from "@/lib/skills-fs";
 
 export const dynamic = 'force-dynamic';
 export default async function Home() {
     const metrics = await getGlobalMetrics();
     const topSkills = await getTopSkills(50);
     const topAgents = await getTopAgents(5);
+    const syncedSkills = getSyncedSkills();
+    const indexedSkills = syncedSkills.map(s => s.name);
 
     return (
         <main>
-            {/* Global Metrics Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
-                <MetricsCard
-                    title="总安装量"
-                    value={Number(metrics.total_installs).toLocaleString()}
-                    icon={<DownloadCloud className="w-4 h-4 text-cyan-400" />}
-                />
-                <MetricsCard
-                    title="收录 Skills"
-                    value={Number(metrics.total_unique_skills).toLocaleString()}
-                    icon={<Zap className="w-4 h-4 text-indigo-400" />}
-                />
-                <MetricsCard
-                    title="活跃 Agents"
-                    value={topAgents.length.toString() + "+"}
-                    icon={<Cpu className="w-4 h-4 text-purple-400" />}
-                />
-            </div>
-
-            {/* Leaderboards */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Top Skills List */}
                 <section className="lg:col-span-2">
-                    <h2 className="text-lg font-semibold mb-3 flex items-center gap-2 text-zinc-300">
-                        <Terminal className="w-4 h-4 text-zinc-500" /> 热门 Skills 排行榜
+                    <h2 className="text-2xl font-bold mb-3 flex items-center gap-2 text-zinc-100">
+                        <Terminal className="w-5 h-5 text-zinc-500" /> 热门 Skills 排行榜
+                        <span className="text-sm font-normal text-zinc-500">（总安装量 {Number(metrics.total_installs).toLocaleString()}）</span>
                     </h2>
-                    <SearchableSkills initialSkills={topSkills} />
+                    <SearchableSkills initialSkills={topSkills} indexedSkills={indexedSkills} />
                 </section>
 
                 {/* Top Agents Panel */}
                 <section className="col-span-1">
-                    <h2 className="text-lg font-semibold mb-3 flex items-center gap-2 text-zinc-300">
-                        <Cpu className="w-4 h-4 text-zinc-500" /> 活跃 Agents
+                    <h2 className="text-2xl font-bold mb-3 flex items-center gap-2 text-zinc-100">
+                        <Cpu className="w-5 h-5 text-zinc-500" /> 活跃 Agents
                     </h2>
                     <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-xl backdrop-blur-xl overflow-hidden">
                         {topAgents.length === 0 ? (
@@ -65,21 +49,7 @@ export default async function Home() {
                     </div>
                 </section>
             </div>
-        </main >
+        </main>
     );
 }
 
-function MetricsCard({ title, value, icon }: { title: string; value: string; icon: React.ReactNode }) {
-    return (
-        <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-xl px-5 py-3 backdrop-blur-xl relative overflow-hidden group hover:border-zinc-700/50 transition-colors flex items-center justify-between gap-4">
-            <div className="flex items-center gap-2.5 relative z-10">
-                <div className="p-1.5 bg-zinc-950/80 rounded-md border border-zinc-800/60 shrink-0">
-                    {icon}
-                </div>
-                <h3 className="text-zinc-500 text-xs font-medium uppercase tracking-wider">{title}</h3>
-            </div>
-            <span className="text-xl font-bold text-zinc-100 tabular-nums relative z-10">{value}</span>
-            <div className="absolute inset-x-0 -bottom-px h-px bg-gradient-to-r from-transparent via-zinc-700 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-        </div>
-    );
-}

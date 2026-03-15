@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Search, X, ChevronDown } from "lucide-react";
+import { Search, X, ChevronDown, ExternalLink } from "lucide-react";
 import { CopyableSourceCommands } from "@/components/copyable-source";
+import Link from "next/link";
 
 type Skill = {
     skill: string;
@@ -14,7 +15,7 @@ type Skill = {
 
 const DEFAULT_VISIBLE = 10;
 
-export function SearchableSkills({ initialSkills }: { initialSkills: Skill[] }) {
+export function SearchableSkills({ initialSkills, indexedSkills = [] }: { initialSkills: Skill[]; indexedSkills?: string[] }) {
     const [query, setQuery] = useState("");
     const [results, setResults] = useState<Skill[]>([]);
     const [loading, setLoading] = useState(false);
@@ -93,7 +94,19 @@ export function SearchableSkills({ initialSkills }: { initialSkills: Skill[] }) 
                                 <div className="flex items-center gap-3 min-w-0">
                                     <span className="text-zinc-600 font-mono text-xs w-5 text-right shrink-0">{index + 1}</span>
                                     <div className="flex flex-col gap-0.5 min-w-0">
-                                        <span className="text-sm font-medium text-zinc-200 group-hover:text-white transition-colors truncate">{item.skill}</span>
+                                        {indexedSkills.includes(item.skill) ? (
+                                            <div className="flex items-center gap-2">
+                                                <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 leading-none shrink-0">
+                                                    已同步
+                                                </span>
+                                                <Link href={`/skills/${encodeURIComponent(item.skill)}`} className="text-sm font-medium text-zinc-200 hover:text-cyan-400 group-hover:text-cyan-400 transition-colors truncate flex items-center gap-1.5 w-fit">
+                                                    {item.skill}
+                                                    <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                                </Link>
+                                            </div>
+                                        ) : (
+                                            <span className="text-sm font-medium text-zinc-200 transition-colors truncate">{item.skill}</span>
+                                        )}
                                         {item.sources && item.sources.length > 0 && <CopyableSourceCommands sources={item.sources} skill={item.skill} sourceInstalls={item.sourceInstalls} />}
                                     </div>
                                 </div>

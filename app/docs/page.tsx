@@ -6,7 +6,7 @@ export default function DocsIndex() {
 
     return (
         <div>
-            <h1 className="text-4xl font-extrabold tracking-tight text-white mb-6">探索文档</h1>
+            <h1 className="text-2xl font-bold text-zinc-100 mb-6">探索文档</h1>
             <p className="text-zinc-400 text-lg mb-12 max-w-2xl">
                 探索 Skills Insights 生态系统的指南、常见问题解答及集成细节。
                 我们在此为您提供关于 CLI 工具、智能体配置以及面板集成的完整说明。

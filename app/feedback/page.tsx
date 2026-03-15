@@ -2,7 +2,7 @@ export default function FeedbackPage() {
     return (
         <div className="flex flex-col h-[calc(100vh-320px)] min-h-[600px]">
             <div className="mb-6">
-                <h1 className="text-4xl font-extrabold tracking-tight text-white mb-4">反馈意见</h1>
+                <h1 className="text-2xl font-bold text-zinc-100 mb-4">反馈意见</h1>
                 <p className="text-zinc-400 text-lg max-w-2xl">
                     我们非常重视您的反馈。请在下方提交您的建议或遇到的问题，帮助我们不断改进 Skills Insights。
                 </p>

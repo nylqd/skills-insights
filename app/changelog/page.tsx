@@ -18,9 +18,9 @@ export default function ChangelogPage() {
 
     return (
         <main className="max-w-3xl">
-            <h2 className="text-2xl font-semibold mb-8 flex items-center gap-2">
+            <h1 className="text-2xl font-bold mb-8 flex items-center gap-2 text-zinc-100">
                 更新日志
-            </h2>
+            </h1>
 
             <div className="space-y-8">
                 {changelogs.map((log) => (
