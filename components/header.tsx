@@ -1,12 +1,24 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { Terminal, Copy, Check } from "lucide-react";
 import Link from "next/link";
 import { useCopy } from "@/lib/use-copy";
+import { motion, AnimatePresence } from "framer-motion";
+
+const ROTATING_WORDS = ["Insights", "Hub", "Radar", "Pulse"];
 
 export function Header() {
     const { copied, copy } = useCopy();
     const command = "curl -sL https://skills.sh | bash";
+    const [wordIndex, setWordIndex] = useState(0);
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setWordIndex((prev) => (prev + 1) % ROTATING_WORDS.length);
+        }, 3000);
+        return () => clearInterval(interval);
+    }, []);
 
     const handleCopy = () => copy(command);
 
@@ -14,8 +26,22 @@ export function Header() {
         <header className="mb-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-8 w-full">
             <div className="text-center sm:text-left">
                 <Link href="/" className="block">
-                    <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight text-white mb-4 hover:opacity-90 transition-opacity">
-                        Skills <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-indigo-400">Insights</span>
+                    <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight text-white mb-4 hover:opacity-90 transition-opacity flex items-center justify-center sm:justify-start">
+                        <span className="pb-2">Skills</span>
+                        <span className="ml-[0.3em] inline-flex items-center relative h-[1.2em] min-w-[5em]">
+                            <AnimatePresence mode="popLayout">
+                                <motion.span
+                                    key={wordIndex}
+                                    initial={{ opacity: 0, y: "50%", filter: "blur(4px)" }}
+                                    animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                                    exit={{ opacity: 0, y: "-50%", filter: "blur(4px)" }}
+                                    transition={{ duration: 0.4, ease: "easeOut" }}
+                                    className="absolute left-0 inline-block text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-indigo-400 pb-2 whitespace-nowrap"
+                                >
+                                    {ROTATING_WORDS[wordIndex]}
+                                </motion.span>
+                            </AnimatePresence>
+                        </span>
                     </h1>
                 </Link>
                 <p className="text-lg text-zinc-400 max-w-2xl leading-relaxed">

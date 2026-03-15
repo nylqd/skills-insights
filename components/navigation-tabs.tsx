@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BookOpen, History, MessageSquare, LayoutGrid, PlusCircle } from "lucide-react";
+import { BookOpen, History, MessageSquare, LayoutGrid, HeartHandshake } from "lucide-react";
 import { clsx } from "clsx";
 
 export function NavigationTabs() {
@@ -93,8 +93,8 @@ export function NavigationTabs() {
                         : "border-transparent text-zinc-400 hover:text-zinc-200 hover:border-zinc-700"
                 )}
             >
-                <PlusCircle className="w-4 h-4" />
-                提交仓库
+                <HeartHandshake className="w-4 h-4" />
+                共享 Skills
             </Link>
         </div>
     );
