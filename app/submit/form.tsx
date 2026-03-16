@@ -53,16 +53,16 @@ export function SubmitForm() {
     };
 
     return (
-        <form onSubmit={handleSubmit} className="space-y-6 bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-6 backdrop-blur-xl">
+        <form onSubmit={handleSubmit} className="space-y-6 bg-white dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800/50 rounded-xl p-6 backdrop-blur-xl shadow-sm transition-colors">
             <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
                 {/* URL */}
                 <div className="md:col-span-5">
-                    <label className="block text-sm font-medium text-zinc-300 mb-1.5">
-                        Git 仓库地址 <span className="text-red-400">*</span>
+                    <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1.5 transition-colors">
+                        Git 仓库地址 <span className="text-red-500 dark:text-red-400">*</span>
                     </label>
                     <div className="relative">
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <LinkIcon className="h-4 w-4 text-zinc-500" />
+                            <LinkIcon className="h-4 w-4 text-zinc-400 dark:text-zinc-500 transition-colors" />
                         </div>
                         <input
                             type="url"
@@ -71,19 +71,19 @@ export function SubmitForm() {
                             placeholder="https://github.com/owner/repo.git"
                             value={formData.url}
                             onChange={handleChange}
-                            className="block w-full pl-10 pr-3 py-2 border border-zinc-700 rounded-md bg-zinc-950 text-zinc-100 placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500 sm:text-sm transition-colors"
+                            className="block w-full pl-10 pr-3 py-2 border border-zinc-200 dark:border-zinc-700 rounded-md bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500 sm:text-sm transition-all shadow-sm"
                         />
                     </div>
                 </div>
 
                 {/* Branch */}
                 <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-zinc-300 mb-1.5">
+                    <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1.5 transition-colors">
                         分支
                     </label>
                     <div className="relative">
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <GitBranch className="h-4 w-4 text-zinc-500" />
+                            <GitBranch className="h-4 w-4 text-zinc-400 dark:text-zinc-500 transition-colors" />
                         </div>
                         <input
                             type="text"
@@ -91,19 +91,19 @@ export function SubmitForm() {
                             placeholder="main"
                             value={formData.branch}
                             onChange={handleChange}
-                            className="block w-full pl-10 pr-3 py-2 border border-zinc-700 rounded-md bg-zinc-950 text-zinc-100 placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500 sm:text-sm transition-colors"
+                            className="block w-full pl-10 pr-3 py-2 border border-zinc-200 dark:border-zinc-700 rounded-md bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500 sm:text-sm transition-all shadow-sm"
                         />
                     </div>
                 </div>
 
                 {/* Contact Name */}
                 <div className="md:col-span-3">
-                    <label className="block text-sm font-medium text-zinc-300 mb-1.5 text-nowrap truncate">
-                        联系人(名字/工号) <span className="text-red-400">*</span>
+                    <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1.5 text-nowrap truncate transition-colors">
+                        联系人(名字/工号) <span className="text-red-500 dark:text-red-400">*</span>
                     </label>
                     <div className="relative">
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <User className="h-4 w-4 text-zinc-500" />
+                            <User className="h-4 w-4 text-zinc-400 dark:text-zinc-500 transition-colors" />
                         </div>
                         <input
                             type="text"
@@ -112,7 +112,7 @@ export function SubmitForm() {
                             placeholder="张三"
                             value={formData.contact_name}
                             onChange={handleChange}
-                            className="block w-full pl-10 pr-3 py-2 border border-zinc-700 rounded-md bg-zinc-950 text-zinc-100 placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500 sm:text-sm transition-colors"
+                            className="block w-full pl-10 pr-3 py-2 border border-zinc-200 dark:border-zinc-700 rounded-md bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500 sm:text-sm transition-all shadow-sm"
                         />
                     </div>
                 </div>

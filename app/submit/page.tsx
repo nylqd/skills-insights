@@ -10,10 +10,10 @@ export default async function SubmitPage() {
     return (
         <main>
             <div className="mb-8">
-                <h1 className="text-2xl font-bold mb-2 flex items-center gap-2 text-zinc-100">
+                <h1 className="text-2xl font-bold mb-2 flex items-center gap-2 text-zinc-900 dark:text-zinc-100 transition-colors">
                     提交 Skills 仓库
                 </h1>
-                <p className="text-zinc-400 text-sm">
+                <p className="text-zinc-600 dark:text-zinc-400 text-sm transition-colors">
                     将你的 Agent Skills 仓库提交到平台进行同步与分发。请确保仓库内的技能配置符合标准格式。
                 </p>
             </div>

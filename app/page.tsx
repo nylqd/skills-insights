@@ -16,8 +16,8 @@ export default async function Home() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Top Skills List */}
                 <section className="lg:col-span-2">
-                    <h2 className="text-2xl font-bold mb-3 flex items-center gap-2 text-zinc-100">
-                        <Terminal className="w-5 h-5 text-zinc-500" /> 热门 Skills 排行榜
+                    <h2 className="text-2xl font-bold mb-3 flex items-center gap-2 text-zinc-900 dark:text-zinc-100 transition-colors">
+                        热门 Skills 排行榜
                         <span className="text-sm font-normal text-zinc-500">（总安装量 {Number(metrics.total_installs).toLocaleString()}）</span>
                     </h2>
                     <SearchableSkills initialSkills={topSkills} indexedSkills={indexedSkills} />
@@ -25,19 +25,19 @@ export default async function Home() {
 
                 {/* Top Agents Panel */}
                 <section className="col-span-1">
-                    <h2 className="text-2xl font-bold mb-3 flex items-center gap-2 text-zinc-100">
-                        <Cpu className="w-5 h-5 text-zinc-500" /> 活跃 Agents
+                    <h2 className="text-2xl font-bold mb-3 flex items-center gap-2 text-zinc-900 dark:text-zinc-100 transition-colors">
+                        活跃 Agents
                     </h2>
-                    <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-xl backdrop-blur-xl overflow-hidden">
+                    <div className="bg-white/50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800/50 rounded-xl backdrop-blur-xl overflow-hidden shadow-sm transition-colors">
                         {topAgents.length === 0 ? (
-                            <div className="text-center py-8 text-zinc-600 text-sm">暂无数据</div>
+                            <div className="text-center py-8 text-zinc-500 text-sm">暂无数据</div>
                         ) : (
-                            <ul className="divide-y divide-zinc-800/60">
+                            <ul className="divide-y divide-zinc-200 dark:divide-zinc-800/60">
                                 {topAgents.map((item: TopAgent, index: number) => (
-                                    <li key={item.agent || "unknown"} className="flex items-center justify-between px-4 py-2.5 hover:bg-zinc-800/30 transition-colors">
+                                    <li key={item.agent || "unknown"} className="flex items-center justify-between px-4 py-2.5 hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition-colors">
                                         <div className="flex items-center gap-3">
-                                            <span className="text-zinc-600 font-mono text-xs w-4 text-right">{index + 1}</span>
-                                            <span className="text-sm font-medium text-zinc-300">{item.agent || "Unknown"}</span>
+                                            <span className="text-zinc-400 dark:text-zinc-600 font-mono text-xs w-4 text-right">{index + 1}</span>
+                                            <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300 transition-colors">{item.agent || "Unknown"}</span>
                                         </div>
                                         <span className="text-xs font-mono text-zinc-500 tabular-nums">
                                             {Number(item.usages).toLocaleString()}

@@ -42,17 +42,17 @@ function getStatusBadge(status: 'pending' | 'approved' | 'rejected') {
 export function SubmittedReposList({ repos }: { repos: SubmittedRepo[] }) {
     if (!repos || repos.length === 0) {
         return (
-            <div className="text-center py-10 bg-zinc-900/30 border border-zinc-800/50 rounded-xl">
+            <div className="text-center py-10 bg-white dark:bg-zinc-900/30 border border-zinc-200 dark:border-zinc-800/50 rounded-xl transition-colors shadow-sm">
                 <p className="text-zinc-500 text-sm">暂无提交记录</p>
             </div>
         );
     }
 
     return (
-        <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-xl overflow-hidden backdrop-blur-xl">
+        <div className="bg-white dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800/50 rounded-xl overflow-hidden backdrop-blur-xl shadow-sm transition-colors">
             <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-zinc-800/60">
-                    <thead className="bg-zinc-900/80">
+                <table className="min-w-full divide-y divide-zinc-200 dark:divide-zinc-800/60 transition-colors">
+                    <thead className="bg-zinc-50 dark:bg-zinc-900/80 transition-colors">
                         <tr>
                             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">
                                 仓库地址
@@ -68,15 +68,15 @@ export function SubmittedReposList({ repos }: { repos: SubmittedRepo[] }) {
                             </th>
                         </tr>
                     </thead>
-                    <tbody className="divide-y divide-zinc-800/60 bg-transparent">
+                    <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800/60 bg-transparent transition-colors">
                         {repos.map((repo) => (
-                            <tr key={repo.id} className="hover:bg-zinc-800/30 transition-colors">
+                            <tr key={repo.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition-colors">
                                 <td className="px-6 py-4 whitespace-nowrap">
                                     <div className="flex flex-col gap-1">
-                                        <div className="text-sm font-medium text-zinc-200 truncate max-w-[300px] sm:max-w-md" title={repo.url}>
+                                        <div className="text-sm font-medium text-zinc-900 dark:text-zinc-200 truncate max-w-[300px] sm:max-w-md transition-colors" title={repo.url}>
                                             {repo.url}
                                         </div>
-                                        <div className="flex items-center gap-1 text-xs text-zinc-500 font-mono">
+                                        <div className="flex items-center gap-1 text-xs text-zinc-500 dark:text-zinc-500 font-mono transition-colors">
                                             <GitBranch className="w-3 h-3" />
                                             {repo.branch}
                                         </div>
@@ -85,10 +85,10 @@ export function SubmittedReposList({ repos }: { repos: SubmittedRepo[] }) {
                                 <td className="px-6 py-4 whitespace-nowrap">
                                     {getStatusBadge(repo.status)}
                                 </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-zinc-400">
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-zinc-600 dark:text-zinc-400 transition-colors">
                                     {repo.last_sync_at 
                                         ? formatTime(repo.last_sync_at) 
-                                        : <span className="text-zinc-600">-</span>}
+                                        : <span className="text-zinc-400 dark:text-zinc-600">-</span>}
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-zinc-500">
                                     {formatTime(repo.created_at)}

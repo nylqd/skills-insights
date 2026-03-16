@@ -15,14 +15,14 @@ export function NavigationTabs({ syncedSkillsCount }: { syncedSkillsCount?: numb
     const isHome = pathname === "/";
 
     return (
-        <div className="flex items-center gap-2 mb-10 border-b border-zinc-800/50">
+        <div className="flex items-center gap-2 mb-10 border-b border-zinc-200 dark:border-zinc-800/50 transition-colors">
             <Link
                 href="/"
                 className={clsx(
                     "flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-all -mb-[1px]",
                     isHome
-                        ? "border-cyan-400 text-cyan-400"
-                        : "border-transparent text-zinc-400 hover:text-zinc-200 hover:border-zinc-700"
+                        ? "border-cyan-400 text-cyan-600 dark:text-cyan-400"
+                        : "border-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 hover:border-zinc-300 dark:hover:border-zinc-700"
                 )}
             >
                 <span className="relative flex h-2 w-2">
@@ -37,8 +37,8 @@ export function NavigationTabs({ syncedSkillsCount }: { syncedSkillsCount?: numb
                 className={clsx(
                     "flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-all -mb-[1px]",
                     isSkills
-                        ? "border-cyan-400 text-cyan-400"
-                        : "border-transparent text-zinc-400 hover:text-zinc-200 hover:border-zinc-700"
+                        ? "border-cyan-400 text-cyan-600 dark:text-cyan-400"
+                        : "border-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 hover:border-zinc-300 dark:hover:border-zinc-700"
                 )}
             >
                 <LayoutGrid className="w-4 h-4" />
@@ -51,12 +51,25 @@ export function NavigationTabs({ syncedSkillsCount }: { syncedSkillsCount?: numb
             </Link>
 
             <Link
+                href="/submit"
+                className={clsx(
+                    "flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-all -mb-[1px]",
+                    isSubmit
+                        ? "border-cyan-400 text-cyan-600 dark:text-cyan-400"
+                        : "border-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 hover:border-zinc-300 dark:hover:border-zinc-700"
+                )}
+            >
+                <HeartHandshake className="w-4 h-4" color="red" />
+                共享 & 共建
+            </Link>
+
+            <Link
                 href="/docs"
                 className={clsx(
                     "flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-all -mb-[1px]",
                     isDocs
-                        ? "border-cyan-400 text-cyan-400"
-                        : "border-transparent text-zinc-400 hover:text-zinc-200 hover:border-zinc-700"
+                        ? "border-cyan-400 text-cyan-600 dark:text-cyan-400"
+                        : "border-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 hover:border-zinc-300 dark:hover:border-zinc-700"
                 )}
             >
                 <BookOpen className="w-4 h-4" />
@@ -68,8 +81,8 @@ export function NavigationTabs({ syncedSkillsCount }: { syncedSkillsCount?: numb
                 className={clsx(
                     "flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-all -mb-[1px]",
                     isChangelog
-                        ? "border-cyan-400 text-cyan-400"
-                        : "border-transparent text-zinc-400 hover:text-zinc-200 hover:border-zinc-700"
+                        ? "border-cyan-400 text-cyan-600 dark:text-cyan-400"
+                        : "border-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 hover:border-zinc-300 dark:hover:border-zinc-700"
                 )}
             >
                 <History className="w-4 h-4" />
@@ -81,25 +94,12 @@ export function NavigationTabs({ syncedSkillsCount }: { syncedSkillsCount?: numb
                 className={clsx(
                     "flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-all -mb-[1px]",
                     isFeedback
-                        ? "border-cyan-400 text-cyan-400"
-                        : "border-transparent text-zinc-400 hover:text-zinc-200 hover:border-zinc-700"
+                        ? "border-cyan-400 text-cyan-600 dark:text-cyan-400"
+                        : "border-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 hover:border-zinc-300 dark:hover:border-zinc-700"
                 )}
             >
                 <MessageSquare className="w-4 h-4" />
                 反馈意见
-            </Link>
-
-            <Link
-                href="/submit"
-                className={clsx(
-                    "flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-all -mb-[1px]",
-                    isSubmit
-                        ? "border-cyan-400 text-cyan-400"
-                        : "border-transparent text-zinc-400 hover:text-zinc-200 hover:border-zinc-700"
-                )}
-            >
-                <HeartHandshake className="w-4 h-4" />
-                共享 Skills
             </Link>
         </div>
     );

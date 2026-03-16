@@ -26,7 +26,7 @@ function CopyableCommand({ command, label }: { command: string; label: string })
             title={`复制 ${label} 命令`}
         >
             <span className="inline-flex items-center gap-1 font-mono shrink-0">
-                <span className="w-10 text-center text-zinc-600 bg-zinc-800/60 px-1 py-0.5 rounded text-[10px] leading-none">{label}</span>
+                <span className="w-10 text-center text-zinc-500 dark:text-zinc-600 bg-zinc-100 dark:bg-zinc-800/60 px-1 py-0.5 rounded text-[10px] leading-none border border-zinc-200 dark:border-transparent transition-colors">{label}</span>
             </span>
             <span className="truncate">{command}</span>
             {copied ? (
@@ -46,7 +46,7 @@ export function CopyableSourceCommands({ sources, skill, sourceInstalls }: { sou
             {sources.map((source) => (
                 <div key={source} className="flex items-center gap-1.5 min-w-0">
                     {sourceInstalls && sourceInstalls[source] !== undefined && (
-                        <span className="w-8 text-right text-[10px] font-mono text-cyan-400/70 bg-cyan-950/40 border border-cyan-800/30 px-1.5 py-0.5 rounded leading-none tabular-nums shrink-0">
+                        <span className="w-8 text-right text-[10px] font-mono text-cyan-600 dark:text-cyan-400/70 bg-cyan-50 dark:bg-cyan-950/40 border border-cyan-200 dark:border-cyan-800/30 px-1.5 py-0.5 rounded leading-none tabular-nums shrink-0 transition-colors">
                             {Number(sourceInstalls[source]).toLocaleString()}
                         </span>
                     )}
