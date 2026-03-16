@@ -26,7 +26,7 @@ export default async function SubmitPage() {
 
                 {/* Bottom: Status */}
                 <section className="flex flex-col">
-                    <h2 className="text-lg font-semibold mb-4 text-zinc-300 flex items-center gap-2">
+                    <h2 className="text-lg font-semibold mb-4 text-zinc-900 dark:text-zinc-100 transition-colors flex items-center gap-2">
                         提交记录
                     </h2>
                     <div className="w-full">

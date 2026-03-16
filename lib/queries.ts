@@ -19,6 +19,7 @@ export type SubmittedRepo = {
     status: 'pending' | 'approved' | 'rejected';
     created_at: string;
     last_sync_at: string | null;
+    contact_name: string;
 };
 
 export async function getGlobalMetrics(): Promise<GlobalMetrics> {
@@ -133,7 +134,7 @@ export async function getSubmittedRepos(): Promise<SubmittedRepo[]> {
     await connection();
     try {
         const [rows] = await pool.query<RowDataPacket[]>(
-            `SELECT id, url, branch, status, created_at, last_sync_at
+            `SELECT id, url, branch, status, created_at, last_sync_at, contact_name
              FROM skills.skill_repos
              ORDER BY created_at DESC`
         );

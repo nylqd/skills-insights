@@ -59,7 +59,10 @@ export function NavigationTabs({ syncedSkillsCount }: { syncedSkillsCount?: numb
                         : "border-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 hover:border-zinc-300 dark:hover:border-zinc-700"
                 )}
             >
-                <HeartHandshake className="w-4 h-4" color="red" />
+                <div className="relative">
+                    <HeartHandshake className="w-4 h-4 text-rose-500 dark:text-rose-400" />
+                    <HeartHandshake className="absolute inset-0 w-4 h-4 text-rose-500/50 dark:text-rose-400/50 animate-ping" />
+                </div>
                 共享 & 共建
             </Link>
 
