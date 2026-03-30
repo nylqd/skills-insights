@@ -1,8 +1,12 @@
-import { execSync } from 'child_process';
+import { exec } from 'child_process';
+import util from 'util';
+import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';
 import { pool } from './db';
 import { RowDataPacket } from 'mysql2';
+
+const execAsync = util.promisify(exec);
 
 // --- Configuration ---
 
@@ -22,6 +26,7 @@ interface SkillInfo {
     description: string;
     files: string[];
     source_repo: string;
+    hash: string;
     synced_at: string;
 }
 
@@ -63,7 +68,7 @@ async function loadConfig(): Promise<SyncConfig> {
 
 // --- Git Operations ---
 
-function cloneOrPull(repo: RepoConfig, cacheDir: string): boolean {
+async function cloneOrPull(repo: RepoConfig, cacheDir: string): Promise<boolean> {
     const name = path.basename(repo.url, '.git');
     const repoDir = path.join(cacheDir, name);
     const authedUrl = getAuthedUrl(repo.url);
@@ -71,20 +76,18 @@ function cloneOrPull(repo: RepoConfig, cacheDir: string): boolean {
     try {
         if (fs.existsSync(path.join(repoDir, '.git'))) {
             console.log(`[skills-sync] Pulling ${name} (${repo.branch})`);
-            execSync(`git -C "${repoDir}" fetch origin ${repo.branch} --depth 1`, {
-                stdio: 'pipe',
+            await execAsync(`git -C "${repoDir}" fetch origin ${repo.branch} --depth 1`, {
                 timeout: 60_000,
             });
-            execSync(`git -C "${repoDir}" reset --hard origin/${repo.branch}`, {
-                stdio: 'pipe',
+            await execAsync(`git -C "${repoDir}" reset --hard origin/${repo.branch}`, {
                 timeout: 30_000,
             });
         } else {
             console.log(`[skills-sync] Cloning ${name} (${repo.branch})`);
             fs.mkdirSync(cacheDir, { recursive: true });
-            execSync(
+            await execAsync(
                 `git clone --branch "${repo.branch}" --depth 1 "${authedUrl}" "${repoDir}"`,
-                { stdio: 'pipe', timeout: 120_000 }
+                { timeout: 120_000 }
             );
         }
         return true;
@@ -92,6 +95,16 @@ function cloneOrPull(repo: RepoConfig, cacheDir: string): boolean {
         console.error(`[skills-sync] Failed to sync ${name}:`, err instanceof Error ? err.message : err);
         return false;
     }
+}
+
+function computeSkillContentHash(skillDir: string, files: string[]): string {
+    const hash = crypto.createHash('sha256');
+    for (const file of files) {
+        const fullPath = path.join(skillDir, file);
+        hash.update(file); // include relative path so renames are detected
+        hash.update(fs.readFileSync(fullPath));
+    }
+    return hash.digest('hex').slice(0, 12);
 }
 
 // --- Skill Discovery ---
@@ -152,13 +165,10 @@ function listFilesRecursive(dir: string): string[] {
 
 // --- Scan & Copy ---
 
-async function scanAndCopySkills(cacheDir: string, outputDir: string): Promise<SkillInfo[]> {
-    const wellKnownDir = path.join(outputDir, '.well-known', 'skills');
-    // Clean output dir
-    if (fs.existsSync(outputDir)) {
-        fs.rmSync(outputDir, { recursive: true, force: true });
-    }
+async function scanAndCopySkills(cacheDir: string, tmpDir: string): Promise<SkillInfo[]> {
+    const wellKnownDir = path.join(tmpDir, '.well-known', 'skills');
     fs.mkdirSync(wellKnownDir, { recursive: true });
+    console.log(`[skills-sync] Building skills in temporary directory: ${tmpDir}`);
 
     const skills: SkillInfo[] = [];
     const syncedAt = new Date().toISOString();
@@ -166,9 +176,10 @@ async function scanAndCopySkills(cacheDir: string, outputDir: string): Promise<S
     const config = await loadConfig();
     for (const repo of config.repos) {
         const repoName = path.basename(repo.url, '.git');
+        const repoDir = path.join(cacheDir, repoName);
         const scanRoot = repo.subpath
-            ? path.join(cacheDir, repoName, repo.subpath)
-            : path.join(cacheDir, repoName);
+            ? path.join(repoDir, repo.subpath)
+            : repoDir;
 
         const skillMdFiles = findSkillMdFiles(scanRoot);
 
@@ -197,11 +208,15 @@ async function scanAndCopySkills(cacheDir: string, outputDir: string): Promise<S
                 return a.localeCompare(b);
             });
 
+            // Compute content hash from skill files
+            const skillHash = computeSkillContentHash(skillDir, sortedFiles);
+
             skills.push({
                 name: skillName,
                 description: extractSkillDescription(skillMdPath),
                 files: sortedFiles,
                 source_repo: repo.url,
+                hash: skillHash,
                 synced_at: syncedAt,
             });
         }
@@ -222,11 +237,44 @@ function generateIndex(skills: SkillInfo[], outputDir: string): void {
             description: s.description,
             files: s.files,
             source_repo: s.source_repo,
+            hash: s.hash,
             synced_at: s.synced_at,
         })),
     };
     fs.writeFileSync(indexPath, JSON.stringify(index, null, 2), 'utf-8');
-    console.log(`[skills-sync] Generated index.json with ${skills.length} skills`);
+
+    // Generate individual skill JSON files
+    for (const skill of index.skills) {
+        const skillPath = path.join(outputDir, '.well-known', 'skills', `${skill.name}.json`);
+        fs.writeFileSync(skillPath, JSON.stringify(skill, null, 2), 'utf-8');
+    }
+
+    console.log(`[skills-sync] Generated index.json and individual skill JSONs with ${skills.length} skills`);
+}
+
+// --- Change Detection ---
+
+interface ExistingSkillMeta {
+    hash: string;
+    synced_at: string;
+}
+
+function loadExistingSkillMetas(outputDir: string): Map<string, ExistingSkillMeta> {
+    const metas = new Map<string, ExistingSkillMeta>();
+    const indexPath = path.join(outputDir, '.well-known', 'skills', 'index.json');
+    try {
+        if (fs.existsSync(indexPath)) {
+            const data = JSON.parse(fs.readFileSync(indexPath, 'utf-8'));
+            for (const skill of data.skills || []) {
+                if (skill.name && skill.hash) {
+                    metas.set(skill.name, { hash: skill.hash, synced_at: skill.synced_at || '' });
+                }
+            }
+        }
+    } catch {
+        // If index.json is corrupt or missing, treat as no existing data
+    }
+    return metas;
 }
 
 // --- Main Entry Points ---
@@ -240,9 +288,12 @@ export async function syncAll(): Promise<void> {
         return;
     }
 
+    // Load existing hashes from current index.json for change detection BEFORE swapping
+    const existingMetas = loadExistingSkillMetas(OUTPUT_DIR);
+
     // 1. Clone/pull all repos
     for (const repo of config.repos) {
-        const success = cloneOrPull(repo, CACHE_DIR);
+        const success = await cloneOrPull(repo, CACHE_DIR);
         if (success) {
             try {
                 await pool.execute(
@@ -255,11 +306,66 @@ export async function syncAll(): Promise<void> {
         }
     }
 
-    // 2. Scan and copy skills
-    const skills = await scanAndCopySkills(CACHE_DIR, OUTPUT_DIR);
+    // 2. Scan and build new skill list (with per-skill hashes) into a temporary directory
+    const tmpDir = `${OUTPUT_DIR}.tmp-${Date.now()}`;
+    const skills = await scanAndCopySkills(CACHE_DIR, tmpDir);
 
-    // 3. Generate index
-    generateIndex(skills, OUTPUT_DIR);
+    // 3. Compare per-skill hashes with existing index to detect changes
+    let hasChanges = false;
+
+    for (const skill of skills) {
+        const existing = existingMetas.get(skill.name);
+        if (!existing || existing.hash !== skill.hash) {
+            console.log(`[skills-sync] Change detected in skill "${skill.name}": ${existing?.hash || '(new)'} -> ${skill.hash}`);
+            hasChanges = true;
+        } else {
+            // Preserve original synced_at for unchanged skills
+            skill.synced_at = existing.synced_at;
+        }
+    }
+
+    // Also detect if skills were removed
+    for (const [name] of existingMetas) {
+        if (!skills.find(s => s.name === name)) {
+            console.log(`[skills-sync] Skill "${name}" removed`);
+            hasChanges = true;
+        }
+    }
+
+    if (!hasChanges) {
+        console.log('[skills-sync] No skill-level changes detected, skipping index generation.');
+        // Wipe the unused tmpDir since nothing changed
+        fs.rm(tmpDir, { recursive: true, force: true }, () => { });
+        return;
+    }
+
+    // 4. Generate index inside the temporary directory
+    generateIndex(skills, tmpDir);
+
+    // 5. Atomic swap: replace the formal output directory with the temporary directory
+    console.log(`[skills-sync] Preparing atomic swap from temporary dir: ${tmpDir}`);
+    const oldDir = `${OUTPUT_DIR}.old-${Date.now()}`;
+    const outputExists = fs.existsSync(OUTPUT_DIR);
+
+    if (outputExists) {
+        console.log(`[skills-sync] Existing output dir detected, moving aside to: ${oldDir}`);
+        fs.renameSync(OUTPUT_DIR, oldDir);
+    }
+
+    console.log(`[skills-sync] Renaming temporary dir to formal output dir: ${OUTPUT_DIR}`);
+    fs.renameSync(tmpDir, OUTPUT_DIR);
+
+    if (outputExists) {
+        // Clean up old dir in background (non-blocking)
+        console.log(`[skills-sync] Triggering background cleanup for old dir: ${oldDir}`);
+        fs.rm(oldDir, { recursive: true, force: true }, (err) => {
+            if (err) {
+                console.error(`[skills-sync] Background cleanup failed for ${oldDir}:`, err);
+            } else {
+                console.log(`[skills-sync] Background cleanup finished successfully for: ${oldDir}`);
+            }
+        });
+    }
 
     console.log(`[skills-sync] Sync complete. ${skills.length} skills available.`);
 }
