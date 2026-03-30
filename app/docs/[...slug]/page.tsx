@@ -23,7 +23,8 @@ export default async function DocPage(props: { params: Promise<{ slug: string[] 
         <article className="prose dark:prose-invert prose-zinc max-w-none 
           prose-headings:text-zinc-900 dark:prose-headings:text-zinc-100 
           prose-a:text-cyan-600 dark:prose-a:text-cyan-400 hover:prose-a:text-cyan-700 dark:hover:prose-a:text-cyan-300 
-          prose-pre:bg-zinc-50 dark:prose-pre:bg-zinc-900/80 prose-pre:border prose-pre:border-zinc-200 dark:prose-pre:border-zinc-800
+          prose-code:text-cyan-700 dark:prose-code:text-cyan-300 prose-code:bg-cyan-50 dark:prose-code:bg-cyan-950/30 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded-md prose-code:before:content-none prose-code:after:content-none 
+          prose-pre:bg-zinc-50 dark:prose-pre:bg-zinc-900/80 prose-pre:border prose-pre:border-zinc-200 dark:prose-pre:border-zinc-800/50
           prose-strong:text-zinc-800 dark:prose-strong:text-zinc-200 transition-colors">
             <h1 className="text-zinc-900 dark:text-zinc-100">{doc.meta.title}</h1>
             <div className="text-zinc-500 dark:text-zinc-400 mb-8 border-b border-zinc-200 dark:border-zinc-800/50 pb-6 flex flex-col gap-1 transition-colors">

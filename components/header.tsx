@@ -92,7 +92,7 @@ export function Header() {
                     <ThemeToggle />
                 </div>
                 {/* QR Code section for Community Group - Moved to top */}
-                <div className="p-4 rounded-xl bg-white dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800/50 flex flex-row items-center gap-5 hover:border-zinc-300 dark:hover:border-zinc-700/80 transition-all duration-300 shadow-sm dark:shadow-xl cursor-default group/qr relative z-20">
+                <div className="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-900/80 border border-zinc-200 dark:border-zinc-800/50 flex flex-row items-center gap-5 hover:bg-zinc-100 dark:hover:bg-zinc-800/60 hover:border-zinc-300 dark:hover:border-zinc-700/50 transition-all duration-300 shadow-sm dark:shadow-xl cursor-default group/qr relative z-20">
                     <div className="w-16 h-16 shrink-0 relative flex justify-center items-center">
                         <img src="/qr.png" alt="QR Code Thumbnail" className="w-full h-full object-cover rounded-xl border border-zinc-100 dark:border-zinc-700/30 group-hover/qr:opacity-90 transition-opacity duration-300" />
 
