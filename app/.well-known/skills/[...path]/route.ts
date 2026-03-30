@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
+import crypto from 'crypto';
 
 const OUTPUT_DIR = process.env.SKILLS_OUTPUT_DIR || path.join(process.cwd(), '.skills-output');
 
@@ -23,11 +24,30 @@ export async function GET(
     const { path: segments } = await params;
     const relativePath = segments.join('/');
 
-    // 1. 简单的特征验证 (KISS Auth) 防君子不防小人
-    const isSkillsCli = _req.headers.get('x-skills-cli') === 'true' || _req.headers.get('x-skills-client') === 'true';
-    const userAgent = _req.headers.get('user-agent') || '';
+    // 1. 简单的特征验证 (KISS Auth) 防君子不防小人，支持动态 Token 增强
+    const expectedToken = process.env.SKILLS_AUTH_TOKEN || 'cmb-skills';
 
-    if (!isSkillsCli || !userAgent.includes('skills-cli')) {
+    let isAuthorized = false;
+    if (expectedToken) {
+        // 基于时间戳的防重放验证，要求携带 Token、时间戳和签名
+        const timestampStr = _req.headers.get('x-skills-timestamp');
+        const signature = _req.headers.get('x-skills-signature');
+
+        if (timestampStr && signature) {
+            const timestamp = parseInt(timestampStr, 10);
+            const now = Math.floor(Date.now() / 1000);
+            // 限制时间戳误差在 5 分钟 (300秒) 以内
+            if (Math.abs(now - timestamp) <= 300) {
+                // 签名算法: sha256(timestamp:token)
+                const expectedSignature = crypto.createHash('sha256').update(`${timestampStr}:${expectedToken}`).digest('hex');
+                if (signature === expectedSignature) {
+                    isAuthorized = true;
+                }
+            }
+        }
+    }
+
+    if (!isAuthorized) {
         // 如果由于旧版 CLI 访问或者普通扫描器触碰了 index.json，抛出友好的阻拦提醒库
         if (relativePath === 'index.json' || relativePath.endsWith('.json')) {
             return NextResponse.json({
@@ -43,15 +63,9 @@ export async function GET(
 
         // 以防界面 CLI 尝试单独抓取说明文档
         if (relativePath === 'upgrade-required/SKILL.md') {
-            return new NextResponse(`---
-name: upgrade-required
-description: "⚠️ 你的访问被阻断或 CLI 版本过低！请执行指令 \`npm i -g @skills/cli@latest\` 升级后方可访问此库。"
----
-
-# ⚠️ 访问受限
-
-你的客户端信息未经验证，大概率是使用了浏览器直接访问或是没有带有效请求头的扫描器。
-请使用最新版的 \`skills cli\` 进行合法访问。`, {
+            const templatePath = path.join(process.cwd(), 'app', '.well-known', 'skills', '[...path]', 'upgrade-required.md');
+            const content = fs.readFileSync(templatePath, 'utf8');
+            return new NextResponse(content, {
                 status: 200,
                 headers: { 'Content-Type': 'text/markdown; charset=utf-8' },
             });
