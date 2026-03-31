@@ -1,4 +1,4 @@
-import { getSyncedSkills } from "@/lib/skills-fs";
+import { getSyncedSkills, getSyncedConflicts } from "@/lib/skills-fs";
 import { Terminal } from "lucide-react";
 import { SyncedSkillsList } from "@/components/synced-skills-list";
 
@@ -6,6 +6,7 @@ export const dynamic = 'force-dynamic';
 
 export default async function SkillsPage() {
     const skills = getSyncedSkills();
+    const conflicts = getSyncedConflicts();
 
     return (
         <main>
@@ -19,7 +20,7 @@ export default async function SkillsPage() {
             </div>
 
             <section>
-                <SyncedSkillsList skills={skills} />
+                <SyncedSkillsList skills={skills} conflicts={conflicts} />
             </section>
         </main>
     );

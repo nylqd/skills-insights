@@ -11,8 +11,16 @@ export interface SyncedSkill {
     synced_at?: string;
 }
 
+export interface SyncedConflict {
+    name: string;
+    description: string;
+    source_repo: string;
+    kept_repo: string;
+}
+
 export interface SyncedSkillsIndex {
     skills: SyncedSkill[];
+    conflicts?: SyncedConflict[];
 }
 
 export function getSyncedSkills(): SyncedSkill[] {
@@ -24,6 +32,19 @@ export function getSyncedSkills(): SyncedSkill[] {
         return data.skills || [];
     } catch (err) {
         console.error('[skills-fs] Failed to read index.json:', err);
+        return [];
+    }
+}
+
+export function getSyncedConflicts(): SyncedConflict[] {
+    const indexPath = path.join(OUTPUT_DIR, '.well-known', 'skills', 'index.json');
+    try {
+        if (!fs.existsSync(indexPath)) return [];
+        const content = fs.readFileSync(indexPath, 'utf-8');
+        const data = JSON.parse(content) as SyncedSkillsIndex;
+        return data.conflicts || [];
+    } catch (err) {
+        console.error('[skills-fs] Failed to read conflicts from index.json:', err);
         return [];
     }
 }

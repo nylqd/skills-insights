@@ -30,6 +30,13 @@ interface SkillInfo {
     synced_at: string;
 }
 
+interface ConflictInfo {
+    name: string;
+    description: string;
+    source_repo: string;
+    kept_repo: string;
+}
+
 const CACHE_DIR = process.env.SKILLS_CACHE_DIR || path.join(process.cwd(), '.skills-cache');
 const OUTPUT_DIR = process.env.SKILLS_OUTPUT_DIR || path.join(process.cwd(), '.skills-output');
 const SYNC_INTERVAL = parseInt(process.env.SKILLS_SYNC_INTERVAL || '600000', 10); // 10 min default
@@ -97,14 +104,27 @@ async function cloneOrPull(repo: RepoConfig, cacheDir: string): Promise<boolean>
     }
 }
 
+const SKILLS_DEBUG = process.env.SKILLS_DEBUG === '1';
+
 function computeSkillContentHash(skillDir: string, files: string[]): string {
     const hash = crypto.createHash('sha256');
+    const skillName = path.basename(skillDir);
     for (const file of files) {
         const fullPath = path.join(skillDir, file);
+        const content = fs.readFileSync(fullPath);
         hash.update(file); // include relative path so renames are detected
-        hash.update(fs.readFileSync(fullPath));
+        hash.update(content);
+
+        if (SKILLS_DEBUG) {
+            const fileHash = crypto.createHash('sha256').update(file).update(content).digest('hex').slice(0, 12);
+            console.log(`[skills-debug] ${skillName}/${file}  hash=${fileHash}  size=${content.length}`);
+        }
     }
-    return hash.digest('hex').slice(0, 12);
+    const result = hash.digest('hex').slice(0, 12);
+    if (SKILLS_DEBUG) {
+        console.log(`[skills-debug] ${skillName} => total_hash=${result}  files=${files.length}`);
+    }
+    return result;
 }
 
 // --- Skill Discovery ---
@@ -153,6 +173,9 @@ function listFilesRecursive(dir: string): string[] {
     const results: string[] = [];
     const entries = fs.readdirSync(dir, { withFileTypes: true });
     for (const entry of entries) {
+        // Skip directories/files that change between git operations or are irrelevant
+        if (entry.name === '.git' || entry.name === 'node_modules' || entry.name === '.DS_Store') continue;
+
         const fullPath = path.join(dir, entry.name);
         if (entry.isDirectory()) {
             results.push(...listFilesRecursive(fullPath));
@@ -165,13 +188,21 @@ function listFilesRecursive(dir: string): string[] {
 
 // --- Scan & Copy ---
 
-async function scanAndCopySkills(cacheDir: string, tmpDir: string): Promise<SkillInfo[]> {
+interface ScanResult {
+    skills: SkillInfo[];
+    conflicts: ConflictInfo[];
+}
+
+async function scanAndCopySkills(cacheDir: string, tmpDir: string): Promise<ScanResult> {
     const wellKnownDir = path.join(tmpDir, '.well-known', 'skills');
     fs.mkdirSync(wellKnownDir, { recursive: true });
     console.log(`[skills-sync] Building skills in temporary directory: ${tmpDir}`);
 
     const skills: SkillInfo[] = [];
+    const conflicts: ConflictInfo[] = [];
     const syncedAt = new Date().toISOString();
+    // Track seen skill names for first-wins deduplication
+    const seenSkills = new Map<string, string>(); // skillName -> source_repo url
 
     const config = await loadConfig();
     for (const repo of config.repos) {
@@ -186,6 +217,21 @@ async function scanAndCopySkills(cacheDir: string, tmpDir: string): Promise<Skil
         for (const skillMdPath of skillMdFiles) {
             const skillDir = path.dirname(skillMdPath);
             const skillName = path.basename(skillDir);
+
+            // Deduplicate: first repo wins, skip duplicates
+            const existingRepo = seenSkills.get(skillName);
+            if (existingRepo) {
+                console.warn(`[skills-sync] Duplicate skill "${skillName}" from ${repo.url} skipped (already provided by ${existingRepo})`);
+                conflicts.push({
+                    name: skillName,
+                    description: extractSkillDescription(skillMdPath),
+                    source_repo: repo.url,
+                    kept_repo: existingRepo,
+                });
+                continue;
+            }
+            seenSkills.set(skillName, repo.url);
+
             const destDir = path.join(wellKnownDir, skillName);
 
             // Copy all files in the skill directory
@@ -222,15 +268,15 @@ async function scanAndCopySkills(cacheDir: string, tmpDir: string): Promise<Skil
         }
     }
 
-    return skills;
+    return { skills, conflicts };
 }
 
 // --- Index Generation ---
 
-function generateIndex(skills: SkillInfo[], outputDir: string): void {
+function generateIndex(skills: SkillInfo[], conflicts: ConflictInfo[], outputDir: string): void {
     const indexPath = path.join(outputDir, '.well-known', 'skills', 'index.json');
     // Conform to cloudflare/agent-skills-discovery-rfc
-    // source_repo and synced_at are extra fields — RFC clients will ignore them
+    // source_repo, synced_at, conflicts are extra fields — RFC clients will ignore them
     const index = {
         skills: skills.map(s => ({
             name: s.name,
@@ -240,6 +286,7 @@ function generateIndex(skills: SkillInfo[], outputDir: string): void {
             hash: s.hash,
             synced_at: s.synced_at,
         })),
+        conflicts: conflicts.length > 0 ? conflicts : undefined,
     };
     fs.writeFileSync(indexPath, JSON.stringify(index, null, 2), 'utf-8');
 
@@ -249,7 +296,7 @@ function generateIndex(skills: SkillInfo[], outputDir: string): void {
         fs.writeFileSync(skillPath, JSON.stringify(skill, null, 2), 'utf-8');
     }
 
-    console.log(`[skills-sync] Generated index.json and individual skill JSONs with ${skills.length} skills`);
+    console.log(`[skills-sync] Generated index.json with ${skills.length} skills and ${conflicts.length} conflicts`);
 }
 
 // --- Change Detection ---
@@ -308,7 +355,7 @@ export async function syncAll(): Promise<void> {
 
     // 2. Scan and build new skill list (with per-skill hashes) into a temporary directory
     const tmpDir = `${OUTPUT_DIR}.tmp-${Date.now()}`;
-    const skills = await scanAndCopySkills(CACHE_DIR, tmpDir);
+    const { skills, conflicts } = await scanAndCopySkills(CACHE_DIR, tmpDir);
 
     // 3. Compare per-skill hashes with existing index to detect changes
     let hasChanges = false;
@@ -340,7 +387,7 @@ export async function syncAll(): Promise<void> {
     }
 
     // 4. Generate index inside the temporary directory
-    generateIndex(skills, tmpDir);
+    generateIndex(skills, conflicts, tmpDir);
 
     // 5. Atomic swap: replace the formal output directory with the temporary directory
     console.log(`[skills-sync] Preparing atomic swap from temporary dir: ${tmpDir}`);
@@ -367,7 +414,7 @@ export async function syncAll(): Promise<void> {
         });
     }
 
-    console.log(`[skills-sync] Sync complete. ${skills.length} skills available.`);
+    console.log(`[skills-sync] Sync complete. ${skills.length} skills available, ${conflicts.length} conflicts.`);
 }
 
 export function startSyncLoop(): void {
