@@ -1,12 +1,15 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Search, X, Package, GitMerge, AlertTriangle } from "lucide-react";
+import { Search, X, Package, GitMerge, AlertTriangle, LayoutGrid, List, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import type { SyncedSkill, SyncedConflict } from "@/lib/skills-fs";
 
+type ViewMode = "grid" | "list";
+
 export function SyncedSkillsList({ skills, conflicts = [] }: { skills: SyncedSkill[]; conflicts?: SyncedConflict[] }) {
     const [query, setQuery] = useState("");
+    const [viewMode, setViewMode] = useState<ViewMode>("list");
 
     const filteredSkills = useMemo(() => {
         if (!query.trim()) return skills;
@@ -62,27 +65,53 @@ export function SyncedSkillsList({ skills, conflicts = [] }: { skills: SyncedSki
 
     return (
         <div>
-            {/* Search Input */}
-            <div className="relative mb-6">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 dark:text-zinc-500" />
-                <input
-                    type="text"
-                    placeholder="按名称或描述搜索..."
-                    value={query}
-                    onChange={(e) => setQuery(e.target.value)}
-                    className="w-full pl-10 pr-10 py-3 bg-white dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800/80 rounded-xl text-sm text-zinc-900 dark:text-zinc-200 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all shadow-sm"
-                />
-                {query && (
+            {/* Search + View Toggle */}
+            <div className="flex items-center gap-3 mb-6">
+                <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 dark:text-zinc-500" />
+                    <input
+                        type="text"
+                        placeholder="按名称或描述搜索..."
+                        value={query}
+                        onChange={(e) => setQuery(e.target.value)}
+                        className="w-full pl-10 pr-10 py-3 bg-white dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800/80 rounded-xl text-sm text-zinc-900 dark:text-zinc-200 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all shadow-sm"
+                    />
+                    {query && (
+                        <button
+                            onClick={() => setQuery("")}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 p-1 rounded-md transition-colors"
+                        >
+                            <X className="w-4 h-4" />
+                        </button>
+                    )}
+                </div>
+                <div className="flex items-center bg-white dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800/80 rounded-xl p-1 shadow-sm">
                     <button
-                        onClick={() => setQuery("")}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 p-1 rounded-md transition-colors"
+                        onClick={() => setViewMode("grid")}
+                        className={`p-2 rounded-lg transition-all ${
+                            viewMode === "grid"
+                                ? "bg-cyan-50 dark:bg-cyan-950/40 text-cyan-600 dark:text-cyan-400 shadow-sm"
+                                : "text-zinc-400 dark:text-zinc-500 hover:text-zinc-600 dark:hover:text-zinc-300"
+                        }`}
+                        title="卡片视图"
                     >
-                        <X className="w-4 h-4" />
+                        <LayoutGrid className="w-4 h-4" />
                     </button>
-                )}
+                    <button
+                        onClick={() => setViewMode("list")}
+                        className={`p-2 rounded-lg transition-all ${
+                            viewMode === "list"
+                                ? "bg-cyan-50 dark:bg-cyan-950/40 text-cyan-600 dark:text-cyan-400 shadow-sm"
+                                : "text-zinc-400 dark:text-zinc-500 hover:text-zinc-600 dark:hover:text-zinc-300"
+                        }`}
+                        title="列表视图"
+                    >
+                        <List className="w-4 h-4" />
+                    </button>
+                </div>
             </div>
 
-            {/* Results Grid by Repo */}
+            {/* Results by Repo */}
             {filteredSkills.length === 0 && filteredConflicts.length === 0 ? (
                 <div className="text-center py-16 bg-white dark:bg-zinc-900/30 border border-zinc-200 dark:border-zinc-800/50 rounded-xl backdrop-blur-sm transition-colors">
                     <p className="text-zinc-500 text-sm">未找到与 &quot;{query}&quot; 相关的 Skills</p>
@@ -101,33 +130,68 @@ export function SyncedSkillsList({ skills, conflicts = [] }: { skills: SyncedSki
                                         {repoSkills.length} Skills
                                     </span>
                                 </h2>
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                    {repoSkills.map((skill) => (
-                                        <Link
-                                            key={skill.name}
-                                            href={`/skills/${encodeURIComponent(skill.name)}`}
-                                            className="bg-white hover:bg-zinc-50 dark:bg-zinc-900/40 border border-zinc-200 dark:border-zinc-800/60 rounded-xl p-5 dark:hover:bg-zinc-800/40 hover:border-zinc-300 dark:hover:border-zinc-700/60 transition-all flex flex-col group cursor-pointer shadow-sm"
-                                        >
-                                            <div className="flex items-center gap-3 mb-3 font-mono">
-                                                <div className="p-2 bg-zinc-50 dark:bg-zinc-950/80 rounded-lg border border-zinc-200 dark:border-zinc-800/80 group-hover:border-zinc-300 dark:group-hover:border-zinc-700 transition-colors">
-                                                    <Package className="w-5 h-5 text-cyan-500 dark:text-cyan-400/80" />
+
+                                {/* ===== Grid (Card) View ===== */}
+                                {viewMode === "grid" && (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                        {repoSkills.map((skill) => (
+                                            <Link
+                                                key={skill.name}
+                                                href={`/skills/${encodeURIComponent(skill.name)}`}
+                                                className="bg-white hover:bg-zinc-50 dark:bg-zinc-900/40 border border-zinc-200 dark:border-zinc-800/60 rounded-xl p-5 dark:hover:bg-zinc-800/40 hover:border-zinc-300 dark:hover:border-zinc-700/60 transition-all flex flex-col group cursor-pointer shadow-sm"
+                                            >
+                                                <div className="flex items-center gap-3 mb-3 font-mono">
+                                                    <div className="p-2 bg-zinc-50 dark:bg-zinc-950/80 rounded-lg border border-zinc-200 dark:border-zinc-800/80 group-hover:border-zinc-300 dark:group-hover:border-zinc-700 transition-colors">
+                                                        <Package className="w-5 h-5 text-cyan-500 dark:text-cyan-400/80" />
+                                                    </div>
+                                                    <h3 className="text-base font-semibold text-zinc-900 dark:text-zinc-200 group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors truncate">
+                                                        {skill.name}
+                                                    </h3>
                                                 </div>
-                                                <h3 className="text-base font-semibold text-zinc-900 dark:text-zinc-200 group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors truncate">
+                                                <p className="text-sm text-zinc-600 dark:text-zinc-400 line-clamp-2 leading-relaxed flex-grow transition-colors">
+                                                    {skill.description || "无描述信息"}
+                                                </p>
+                                                <div className="mt-4 pt-4 border-t border-zinc-100 dark:border-zinc-800/50 flex items-center justify-between text-xs text-zinc-400 dark:text-zinc-500 transition-colors">
+                                                    <span>{skill.files.length} 个文件</span>
+                                                    <span className="text-cyan-500/0 group-hover:text-cyan-500 transition-colors flex items-center gap-1">
+                                                        查看详情 &rarr;
+                                                    </span>
+                                                </div>
+                                            </Link>
+                                        ))}
+                                    </div>
+                                )}
+
+                                {/* ===== List View ===== */}
+                                {viewMode === "list" && (
+                                    <div className="border border-zinc-200 dark:border-zinc-800/60 rounded-xl overflow-hidden shadow-sm">
+                                        {repoSkills.map((skill, idx) => (
+                                            <Link
+                                                key={skill.name}
+                                                href={`/skills/${encodeURIComponent(skill.name)}`}
+                                                className={`flex items-center gap-4 px-4 py-3 bg-white dark:bg-zinc-900/40 hover:bg-zinc-50 dark:hover:bg-zinc-800/40 transition-all group cursor-pointer ${
+                                                    idx !== repoSkills.length - 1
+                                                        ? "border-b border-zinc-100 dark:border-zinc-800/40"
+                                                        : ""
+                                                }`}
+                                            >
+                                                <div className="p-1.5 bg-zinc-50 dark:bg-zinc-950/80 rounded-lg border border-zinc-200 dark:border-zinc-800/80 group-hover:border-zinc-300 dark:group-hover:border-zinc-700 transition-colors shrink-0">
+                                                    <Package className="w-4 h-4 text-cyan-500 dark:text-cyan-400/80" />
+                                                </div>
+                                                <h3 className="text-sm font-semibold font-mono text-zinc-900 dark:text-zinc-200 group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors shrink-0 w-48 truncate">
                                                     {skill.name}
                                                 </h3>
-                                            </div>
-                                            <p className="text-sm text-zinc-600 dark:text-zinc-400 line-clamp-2 leading-relaxed flex-grow transition-colors">
-                                                {skill.description || "无描述信息"}
-                                            </p>
-                                            <div className="mt-4 pt-4 border-t border-zinc-100 dark:border-zinc-800/50 flex items-center justify-between text-xs text-zinc-400 dark:text-zinc-500 transition-colors">
-                                                <span>{skill.files.length} 个文件</span>
-                                                <span className="text-cyan-500/0 group-hover:text-cyan-500 transition-colors flex items-center gap-1">
-                                                    查看详情 &rarr;
+                                                <p className="text-sm text-zinc-500 dark:text-zinc-400 truncate flex-1 transition-colors">
+                                                    {skill.description || "无描述信息"}
+                                                </p>
+                                                <span className="text-xs text-zinc-400 dark:text-zinc-500 shrink-0 tabular-nums">
+                                                    {skill.files.length} 文件
                                                 </span>
-                                            </div>
-                                        </Link>
-                                    ))}
-                                </div>
+                                                <ChevronRight className="w-4 h-4 text-zinc-300 dark:text-zinc-600 group-hover:text-cyan-500 transition-colors shrink-0" />
+                                            </Link>
+                                        ))}
+                                    </div>
+                                )}
 
                                 {/* Conflict cards for this repo */}
                                 {repoConflicts.length > 0 && (
@@ -136,29 +200,62 @@ export function SyncedSkillsList({ skills, conflicts = [] }: { skills: SyncedSki
                                             <AlertTriangle className="w-3.5 h-3.5" />
                                             {repoConflicts.length} 个同名 Skill 因冲突未同步
                                         </p>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                                            {repoConflicts.map((conflict) => (
-                                                <div
-                                                    key={`${conflict.name}-${conflict.source_repo}`}
-                                                    className="bg-amber-50/50 dark:bg-amber-950/10 border border-amber-200/60 dark:border-amber-800/30 rounded-xl p-4 opacity-70 transition-colors"
-                                                >
-                                                    <div className="flex items-center gap-3 mb-2 font-mono">
-                                                        <div className="p-2 bg-amber-50 dark:bg-amber-950/30 rounded-lg border border-amber-200/60 dark:border-amber-800/30">
-                                                            <Package className="w-4 h-4 text-amber-500 dark:text-amber-400/60" />
+
+                                        {/* Conflicts: Grid View */}
+                                        {viewMode === "grid" && (
+                                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                                                {repoConflicts.map((conflict) => (
+                                                    <div
+                                                        key={`${conflict.name}-${conflict.source_repo}`}
+                                                        className="bg-amber-50/50 dark:bg-amber-950/10 border border-amber-200/60 dark:border-amber-800/30 rounded-xl p-4 opacity-70 transition-colors"
+                                                    >
+                                                        <div className="flex items-center gap-3 mb-2 font-mono">
+                                                            <div className="p-2 bg-amber-50 dark:bg-amber-950/30 rounded-lg border border-amber-200/60 dark:border-amber-800/30">
+                                                                <Package className="w-4 h-4 text-amber-500 dark:text-amber-400/60" />
+                                                            </div>
+                                                            <h3 className="text-sm font-semibold text-amber-800 dark:text-amber-300/80 truncate">
+                                                                {conflict.name}
+                                                            </h3>
                                                         </div>
-                                                        <h3 className="text-sm font-semibold text-amber-800 dark:text-amber-300/80 truncate">
+                                                        <p className="text-xs text-amber-700/80 dark:text-amber-400/60 line-clamp-2 leading-relaxed mb-2">
+                                                            {conflict.description || "无描述信息"}
+                                                        </p>
+                                                        <p className="text-xs text-amber-700/70 dark:text-amber-500/50 truncate">
+                                                            已采用来源: {conflict.kept_repo}
+                                                        </p>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+
+                                        {/* Conflicts: List View */}
+                                        {viewMode === "list" && (
+                                            <div className="border border-amber-200/60 dark:border-amber-800/30 rounded-xl overflow-hidden">
+                                                {repoConflicts.map((conflict, idx) => (
+                                                    <div
+                                                        key={`${conflict.name}-${conflict.source_repo}`}
+                                                        className={`flex items-center gap-4 px-4 py-2.5 bg-amber-50/50 dark:bg-amber-950/10 opacity-70 transition-colors ${
+                                                            idx !== repoConflicts.length - 1
+                                                                ? "border-b border-amber-100/60 dark:border-amber-800/20"
+                                                                : ""
+                                                        }`}
+                                                    >
+                                                        <div className="p-1.5 bg-amber-50 dark:bg-amber-950/30 rounded-lg border border-amber-200/60 dark:border-amber-800/30 shrink-0">
+                                                            <Package className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400/60" />
+                                                        </div>
+                                                        <h3 className="text-sm font-semibold font-mono text-amber-800 dark:text-amber-300/80 shrink-0 w-48 truncate">
                                                             {conflict.name}
                                                         </h3>
+                                                        <p className="text-xs text-amber-700/80 dark:text-amber-400/60 truncate flex-1">
+                                                            {conflict.description || "无描述信息"}
+                                                        </p>
+                                                        <span className="text-xs text-amber-700/70 dark:text-amber-500/50 shrink-0 truncate max-w-40">
+                                                            采用: {conflict.kept_repo}
+                                                        </span>
                                                     </div>
-                                                    <p className="text-xs text-amber-700/80 dark:text-amber-400/60 line-clamp-2 leading-relaxed mb-2">
-                                                        {conflict.description || "无描述信息"}
-                                                    </p>
-                                                    <p className="text-xs text-amber-700/70 dark:text-amber-500/50 truncate">
-                                                        已采用来源: {conflict.kept_repo}
-                                                    </p>
-                                                </div>
-                                            ))}
-                                        </div>
+                                                ))}
+                                            </div>
+                                        )}
                                     </div>
                                 )}
                             </div>
